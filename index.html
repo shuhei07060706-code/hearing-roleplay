@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ショート動画ヒアリング ロールプレイ</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ===== SELECT SCREEN ===== */
+    .select-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    /* ===== RESUME BANNER ===== */
+    .resume-banner { background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 16px; padding: 18px 24px; max-width: 940px; width: 100%; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .resume-banner-info { flex: 1; min-width: 0; }
+    .resume-banner-title { font-size: 15px; font-weight: 700; color: #2e7d32; margin-bottom: 4px; }
+    .resume-banner-meta { font-size: 13px; color: #555; }
+    .resume-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-resume { background: #2e7d32; color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .btn-resume:hover { background: #1b5e20; }
+    .btn-discard { background: white; color: #888; border: 1.5px solid #ccc; border-radius: 10px; padding: 10px 16px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .btn-discard:hover { border-color: #e53935; color: #e53935; }
+
+    .select-header { text-align: center; margin-bottom: 40px; }
+    .select-header h1 { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+    .select-header p { font-size: 15px; color: #666; line-height: 1.6; }
+    .badge-row { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .badge { background: #e8eaf6; color: #3949ab; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 940px;
+      width: 100%;
+    }
+    .client-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .client-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .card-avatar { font-size: 40px; margin-bottom: 14px; display: block; }
+    .card-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .card-business { font-size: 13px; color: #888; margin-bottom: 12px; }
+    .card-desc { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+    .card-difficulty { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+    .difficulty-beginner { background: #e8f5e9; color: #2e7d32; }
+    .difficulty-intermediate { background: #fff8e1; color: #f57f17; }
+    .difficulty-advanced { background: #fce4ec; color: #c62828; }
+    .difficulty-custom { background: #ede7f6; color: #6a1b9a; }
+
+    /* Custom card */
+    .custom-card {
+      border: 2px dashed #c5cae9;
+      background: #f8f9ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      gap: 12px;
+    }
+    .custom-card:hover { border-color: #3949ab; background: #eef0ff; }
+    .custom-card-plus { font-size: 40px; color: #3949ab; }
+    .custom-card-title { font-size: 17px; font-weight: 700; color: #3949ab; }
+    .custom-card-sub { font-size: 13px; color: #888; text-align: center; }
+
+    .random-card { border: 2px dashed #e91e63; background: linear-gradient(135deg, #fff0f7, #f3e5ff); }
+    .random-card:hover { border-color: #ad1457; background: linear-gradient(135deg, #ffe0ef, #ede7f6); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(233,30,99,0.15); }
+    .random-card-dice { font-size: 40px; animation: dice-spin 3s ease-in-out infinite; }
+    @keyframes dice-spin { 0%,100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(15deg) scale(1.15); } }
+    .random-card-title { font-size: 17px; font-weight: 700; color: #ad1457; }
+    .random-card-sub { font-size: 13px; color: #888; text-align: center; line-height: 1.6; }
+    .random-tag-row { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
+    .random-tag { background: #fce4ec; color: #c2185b; border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+
+    /* ===== CUSTOM FORM MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .form-modal {
+      background: white;
+      border-radius: 18px;
+      padding: 36px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .form-modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .form-modal .form-subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .form-section { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #444;
+      margin-bottom: 6px;
+    }
+    .form-label span { color: #e53935; margin-left: 2px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1a1a2e;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #3949ab; }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+    .personality-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .personality-option {
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .personality-option.selected { border-color: #3949ab; background: #eef0ff; }
+    .personality-option:hover { border-color: #9fa8da; }
+    .personality-option .p-emoji { font-size: 22px; margin-bottom: 4px; }
+    .personality-option .p-name { font-size: 13px; font-weight: 700; color: #333; }
+    .personality-option .p-desc { font-size: 11px; color: #888; margin-top: 2px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-actions { display: flex; gap: 12px; margin-top: 8px; }
+    .btn-form-cancel {
+      flex: 1;
+      background: #f5f5f5;
+      color: #555;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-form-submit {
+      flex: 2;
+      background: #3949ab;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-form-submit:hover { background: #283593; }
+    .btn-form-submit:disabled { background: #c5cae9; cursor: not-allowed; }
+    .form-error { color: #e53935; font-size: 12px; margin-top: 4px; }
+
+    /* ===== INTRO MODAL ===== */
+    .modal-box {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .modal-box p { font-size: 14px; color: #555; line-height: 1.7; margin-bottom: 8px; }
+    .modal-rules { background: #f8f9ff; border-radius: 10px; padding: 14px; margin: 16px 0; }
+    .modal-rules li { font-size: 13px; color: #444; line-height: 1.8; list-style: none; padding-left: 4px; }
+    .modal-rules li::before { content: "✓ "; color: #3949ab; font-weight: 700; }
+    .btn-start {
+      width: 100%;
+      background: #3949ab;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-start:hover { background: #283593; }
+
+    /* ===== CHAT SCREEN ===== */
+    .chat-screen { display: flex; height: 100vh; overflow: hidden; }
+    .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-header {
+      background: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid #eee;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .header-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .header-info h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .header-info p { font-size: 12px; color: #888; }
+    .header-actions { margin-left: auto; display: flex; gap: 10px; }
+    .btn-end {
+      background: #ff5252; color: white; border: none;
+      border-radius: 8px; padding: 8px 18px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-end:hover { background: #d32f2f; }
+    .btn-back {
+      background: #f5f5f5; color: #555; border: none;
+      border-radius: 8px; padding: 8px 18px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-back:hover { background: #e0e0e0; }
+
+    .messages-area {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .message { display: flex; gap: 10px; max-width: 75%; }
+    .message.user-msg { align-self: flex-end; flex-direction: row-reverse; }
+    .message.client-msg { align-self: flex-start; }
+    .msg-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0; background: #f0f2f5;
+    }
+    .msg-bubble { padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; }
+    .client-msg .msg-bubble { background: white; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .user-msg .msg-bubble { background: #3949ab; color: white; border-bottom-right-radius: 4px; }
+    .msg-name { font-size: 11px; color: #aaa; margin-bottom: 4px; }
+    .user-msg .msg-name { text-align: right; }
+
+    .typing-indicator { display: flex; gap: 4px; padding: 12px 16px; background: white; border-radius: 18px; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); width: fit-content; }
+    .typing-dot { width: 8px; height: 8px; background: #bbb; border-radius: 50%; animation: typing 1.2s ease-in-out infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-4px); opacity: 1; } }
+
+    .input-area { background: white; padding: 16px 20px; border-top: 1px solid #eee; display: flex; gap: 12px; align-items: flex-end; }
+    .input-box { flex: 1; border: 1.5px solid #e0e0e0; border-radius: 12px; padding: 10px 16px; font-size: 14px; font-family: inherit; resize: none; outline: none; transition: border-color 0.2s; max-height: 120px; min-height: 44px; }
+    .input-box:focus { border-color: #3949ab; }
+    .send-btn { width: 44px; height: 44px; border-radius: 12px; border: none; background: #3949ab; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .send-btn:hover { background: #283593; }
+    .send-btn:disabled { background: #c5cae9; cursor: not-allowed; }
+    .mic-btn { width: 44px; height: 44px; border-radius: 12px; border: none; background: #f5f5f5; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: background 0.2s, color 0.2s; }
+    .mic-btn:hover { background: #e8eaf6; color: #3949ab; }
+    .mic-btn.recording { background: #ffebee; color: #e53935; animation: mic-pulse 1s ease-in-out infinite; }
+    .mic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    @keyframes mic-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); } 50% { box-shadow: 0 0 0 8px rgba(229,57,53,0); } }
+    .mic-unsupported { display: none; }
+    .tts-toggle-btn { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid #e0e0e0; background: #f5f5f5; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: all 0.2s; }
+    .tts-toggle-btn:hover { border-color: #3949ab; color: #3949ab; background: #e8eaf6; }
+    .tts-toggle-btn.active { background: #e8f5e9; border-color: #43a047; color: #2e7d32; }
+    .sidebar-toggle-btn { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid #e0e0e0; background: #f5f5f5; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; transition: all 0.2s; }
+    .sidebar-toggle-btn:hover { border-color: #3949ab; color: #3949ab; background: #e8eaf6; }
+    .sidebar-toggle-btn.active { background: #e8eaf6; border-color: #3949ab; color: #3949ab; }
+    .speak-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #bbb; padding: 2px 4px; border-radius: 6px; transition: color 0.15s; line-height: 1; margin-top: 4px; display: inline-block; }
+    .speak-btn:hover { color: #3949ab; }
+    .speak-btn.speaking { color: #43a047; animation: speak-pulse 0.8s ease-in-out infinite; }
+    @keyframes speak-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ===== API KEY MODAL ===== */
+    .apikey-overlay { position: fixed; inset: 0; background: rgba(26,26,46,0.7); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .apikey-modal { background: white; border-radius: 20px; width: 100%; max-width: 520px; padding: 36px; box-shadow: 0 24px 64px rgba(0,0,0,0.25); }
+    .apikey-modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #1a1a2e; }
+    .apikey-modal p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 20px; }
+    .apikey-steps { background: #f8f9ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; }
+    .apikey-steps ol { padding-left: 18px; }
+    .apikey-steps li { font-size: 13px; color: #444; line-height: 1.8; }
+    .apikey-steps a { color: #3949ab; text-decoration: none; font-weight: 600; }
+    .apikey-steps a:hover { text-decoration: underline; }
+    .apikey-input-row { display: flex; gap: 10px; }
+    .apikey-input { flex: 1; border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: monospace; outline: none; transition: border-color 0.2s; }
+    .apikey-input:focus { border-color: #3949ab; }
+    .apikey-input.error { border-color: #e53935; }
+    .apikey-btn { background: #3949ab; color: white; border: none; border-radius: 10px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .apikey-btn:hover { background: #283593; }
+    .apikey-btn:disabled { background: #c5cae9; cursor: not-allowed; }
+    .apikey-error { color: #e53935; font-size: 13px; margin-top: 8px; }
+    .apikey-note { font-size: 12px; color: #999; margin-top: 10px; line-height: 1.6; }
+    .apikey-change-btn { background: none; border: 1.5px solid #c5cae9; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #888; cursor: pointer; transition: all 0.15s; }
+    .apikey-change-btn:hover { border-color: #3949ab; color: #3949ab; }
+    .api-error-bubble { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #e65100; margin: 8px 20px; line-height: 1.6; }
+
+    /* ===== COMPLETION BANNER ===== */
+    .completion-banner { margin: 12px 20px; background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border: 2px solid #a5d6a7; border-radius: 16px; padding: 18px 20px; animation: banner-in 0.4s ease; }
+    @keyframes banner-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .completion-banner-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .completion-banner-title { font-size: 16px; font-weight: 700; color: #2e7d32; }
+    .completion-banner-sub { font-size: 13px; color: #555; }
+    .completion-banner-actions { display: flex; gap: 10px; }
+    .btn-complete { background: #2e7d32; color: white; border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .btn-complete:hover { background: #1b5e20; }
+    .btn-continue { background: white; color: #555; border: 1.5px solid #ccc; border-radius: 10px; padding: 10px 18px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .btn-continue:hover { border-color: #3949ab; color: #3949ab; }
+
+    /* ===== HELP MODAL ===== */
+    .help-btn { background: #3949ab; border: none; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; color: white; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; margin-left: 8px; white-space: nowrap; }
+    .help-btn:hover { background: #283593; }
+    .help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .help-modal { background: white; border-radius: 20px; width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .help-modal-header { padding: 24px 28px 0; display: flex; align-items: center; justify-content: space-between; }
+    .help-modal-header h2 { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+    .help-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; line-height: 1; padding: 4px; }
+    .help-close:hover { color: #333; }
+    .help-body { padding: 20px 28px 28px; }
+    .help-section { margin-bottom: 24px; }
+    .help-section:last-child { margin-bottom: 0; }
+    .help-section h3 { font-size: 14px; font-weight: 700; color: #3949ab; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #e8eaf6; }
+    .help-steps { display: flex; flex-direction: column; gap: 10px; }
+    .help-step { display: flex; gap: 12px; align-items: flex-start; }
+    .help-step-num { background: #3949ab; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .help-step-text { font-size: 14px; color: #333; line-height: 1.6; }
+    .help-step-text strong { color: #1a1a2e; }
+    .help-grade-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .help-grade { border-radius: 10px; padding: 6px 14px; font-size: 13px; font-weight: 700; }
+    .help-tip { background: #fff8e1; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #5d4037; line-height: 1.7; }
+    .help-tip li { margin-left: 16px; margin-bottom: 2px; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar { width: 260px; background: white; border-left: 1px solid #eee; display: flex; flex-direction: column; overflow-y: auto; transition: width 0.25s ease, opacity 0.25s ease; }
+    .sidebar.hidden { width: 0; opacity: 0; overflow: hidden; border-left: none; pointer-events: none; }
+
+    /* ===== MOBILE CHECKLIST BOTTOM SHEET ===== */
+    .mobile-checklist-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150; display: flex; align-items: flex-end; animation: fade-in 0.2s ease; }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .mobile-checklist-sheet { background: white; border-radius: 20px 20px 0 0; width: 100%; max-height: 75vh; overflow-y: auto; animation: slide-up 0.25s ease; }
+    @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .mobile-checklist-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 0; }
+    .mobile-checklist-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px; }
+    .mobile-checklist-header h3 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+    .mobile-checklist-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #aaa; padding: 4px; }
+    .mobile-checklist-body { padding: 0 16px 24px; }
+    .sidebar-section { padding: 20px; border-bottom: 1px solid #f0f0f0; }
+    .sidebar-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; margin-bottom: 14px; }
+    .client-profile { text-align: center; }
+    .profile-avatar { font-size: 48px; display: block; margin-bottom: 10px; }
+    .profile-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .profile-business { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .profile-loc { font-size: 12px; color: #aaa; margin-bottom: 12px; }
+    .profile-tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+    .profile-personality { font-size: 12px; color: #666; line-height: 1.6; margin-top: 12px; text-align: left; background: #f8f8f8; padding: 10px; border-radius: 8px; }
+
+    .topic-list { display: flex; flex-direction: column; gap: 8px; }
+    .topic-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 13px; transition: background 0.2s; }
+    .topic-item.covered { background: #e8f5e9; color: #2e7d32; }
+    .topic-item.uncovered { background: #f5f5f5; color: #999; }
+    .topic-icon { font-size: 16px; }
+    .topic-label { flex: 1; font-weight: 500; }
+    .topic-check { font-size: 14px; }
+
+    .progress-bar-wrap { margin-top: 6px; }
+    .progress-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 6px; }
+    .progress-bar-track { background: #eee; border-radius: 10px; height: 8px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #3949ab, #5c6bc0); transition: width 0.5s ease; }
+    .hint-box { background: #fff8e1; border-radius: 8px; padding: 10px; font-size: 12px; color: #795548; line-height: 1.6; }
+
+    /* ===== RESULT SCREEN ===== */
+    .result-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .result-card { background: white; border-radius: 20px; padding: 40px; max-width: 680px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+    .result-header { text-align: center; margin-bottom: 32px; }
+    .result-grade { font-size: 72px; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+    .result-score-text { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .result-subtitle { font-size: 14px; color: #888; }
+    .result-client-row { display: flex; align-items: center; gap: 12px; background: #f8f8f8; border-radius: 12px; padding: 14px 18px; margin-bottom: 28px; }
+    .result-client-avatar { font-size: 30px; }
+    .result-client-info p { font-size: 12px; color: #888; }
+    .result-client-info strong { font-size: 15px; }
+    .result-topics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+    .result-topic { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; position: relative; }
+    .result-topic.hit { background: #e8f5e9; color: #2e7d32; }
+    .result-topic.miss.critical { background: #fce4ec; color: #c62828; border: 1.5px solid #ef9a9a; }
+    .result-topic.miss.important { background: #fff3e0; color: #e65100; }
+    .result-topic.miss.bonus { background: #f5f5f5; color: #9e9e9e; }
+    .topic-importance-tag { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-left: auto; flex-shrink: 0; }
+    .critical .topic-importance-tag { background: #ffcdd2; color: #c62828; }
+    .important .topic-importance-tag { background: #ffe0b2; color: #e65100; }
+    .bonus .topic-importance-tag { background: #eeeeee; color: #757575; }
+    .result-goal-row { display: flex; align-items: center; gap: 10px; background: #e8eaf6; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; }
+    .result-goal-badge { font-weight: 700; color: #3949ab; font-size: 15px; }
+    .result-feedback { background: #f0f4ff; border-radius: 12px; padding: 18px; margin-bottom: 28px; }
+    .result-feedback h3 { font-size: 14px; font-weight: 700; color: #3949ab; margin-bottom: 8px; }
+    .result-feedback p { font-size: 13px; color: #555; line-height: 1.7; }
+    .result-buttons { display: flex; gap: 12px; }
+    .btn-retry { flex: 1; background: #3949ab; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-retry:hover { background: #283593; }
+    .btn-other { flex: 1; background: #f5f5f5; color: #333; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-other:hover { background: #e0e0e0; }
+
+    /* ===== DIFFICULTY SELECTOR ===== */
+    .diff-selector-label {
+      font-size: 13px; font-weight: 700; color: #444; margin-bottom: 10px;
+    }
+    .diff-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+    .diff-btn {
+      flex: 1; border: 2px solid #e0e0e0; border-radius: 12px;
+      padding: 12px 8px; background: white; cursor: pointer;
+      transition: all 0.2s; text-align: center; display: flex;
+      flex-direction: column; align-items: center; gap: 4px;
+    }
+    .diff-btn:hover { border-color: #9fa8da; transform: translateY(-1px); }
+    .diff-btn.selected-easy   { border-color: #2e7d32; background: #e8f5e9; }
+    .diff-btn.selected-normal { border-color: #f57f17; background: #fff8e1; }
+    .diff-btn.selected-hard   { border-color: #c62828; background: #fce4ec; }
+    .diff-btn .d-emoji { font-size: 20px; }
+    .diff-btn .d-name  { font-size: 14px; font-weight: 700; color: #333; }
+    .diff-btn .d-desc  { font-size: 11px; color: #888; line-height: 1.4; }
+
+    .diff-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .diff-badge-easy   { background: #e8f5e9; color: #2e7d32; }
+    .diff-badge-normal { background: #fff8e1; color: #f57f17; }
+    .diff-badge-hard   { background: #fce4ec; color: #c62828; }
+
+    @media (max-width: 700px) {
+      /* サイドバー非表示 */
+      .sidebar { display: none; }
+
+      /* 選択画面 */
+      .select-screen { padding: 24px 14px; }
+      .select-header h1 { font-size: 20px; }
+      .select-header p { font-size: 13px; }
+      .help-btn { font-size: 12px; padding: 6px 12px; }
+      .client-grid { grid-template-columns: 1fr; gap: 14px; }
+
+      /* チャットヘッダー */
+      .chat-header { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+      .header-avatar { width: 36px; height: 36px; font-size: 18px; flex-shrink: 0; }
+      .header-info h2 { font-size: 14px; }
+      .header-info p { font-size: 11px; }
+      .header-actions { gap: 6px; flex-wrap: wrap; }
+      .btn-back { display: none; }
+      .btn-end { font-size: 12px; padding: 6px 12px; }
+      .diff-badge { font-size: 10px; padding: 3px 7px; }
+      .tts-toggle-btn, .sidebar-toggle-btn { width: 32px; height: 32px; font-size: 14px; }
+      .apikey-change-btn { font-size: 11px; padding: 4px 8px; }
+
+      /* メッセージ */
+      .messages-area { padding: 12px; gap: 12px; }
+      .message { max-width: 90%; }
+      .msg-bubble { font-size: 13px; padding: 10px 13px; }
+
+      /* 入力欄 */
+      .input-area { padding: 10px 12px; gap: 8px; }
+      .input-box { font-size: 14px; padding: 9px 12px; }
+      .send-btn, .mic-btn { width: 40px; height: 40px; font-size: 16px; }
+
+      /* 完了バナー */
+      .completion-banner { margin: 8px 12px; padding: 14px 16px; }
+      .completion-banner-actions { flex-direction: column; gap: 6px; }
+
+      /* 結果画面 */
+      .result-topics { grid-template-columns: 1fr; }
+      .result-card { padding: 24px 18px; }
+      .result-grade { font-size: 56px; }
+      .result-buttons { flex-direction: column; }
+
+      /* フォーム */
+      .form-row { grid-template-columns: 1fr; }
+      .personality-grid { grid-template-columns: 1fr 1fr; }
+      .diff-selector { flex-direction: column; }
+      .form-modal { padding: 24px 18px; max-height: 95vh; }
+
+      /* APIキーモーダル */
+      .apikey-modal { padding: 24px 18px; }
+      .apikey-input-row { flex-direction: column; }
+      .apikey-btn { width: 100%; }
+
+      /* イントロモーダル */
+      .modal-box { padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect, useCallback } = React;
+
+    // ===== PRESET CLIENT DATA =====
+    const CLIENTS = [
+      {
+        id: "ramen", name: "田中 修一", age: "58歳",
+        business: "ラーメン店「麺屋 田中」", location: "東京・渋谷区",
+        avatar: "🍜", color: "#ff6b35",
+        background: "渋谷で25年営む老舗ラーメン店。近年、競合が増え売上が落ちている。SNSほぼ未経験。",
+        personality: "話好きで人情味あり。デジタルに疎く、コスパを重視。最初は懐疑的だが前向きに。",
+        difficulty: "初級", difficultyClass: "difficulty-beginner",
+        responses: {
+          greeting: "あ、どうも。今日はよろしくお願いします。動画っていうのをやってみようかなと思って。うちの店、最近お客さんが減ってきてて…正直、SNSとか全然わからないんですけどね（笑）。何から聞いてもらえますか？",
+          goal: ["そうですね、やっぱりお客さんを増やしたいんですよ。最近は近くに新しい店が増えて売上が去年より10〜15%くらい落ちてるんです。SNSで若い人にも来てもらえたらなと思って。", "売上を上げたいのが一番ですね。あと、うちのラーメンのこと、もっと多くの人に知ってほしいというか。25年やってきた味を知ってもらいたい気持ちもあって。"],
+          target: ["今は40〜50代のサラリーマンが多いかな。でもSNSやるなら若い人にも来てほしいですね。20〜30代を増やしたいかな。", "うーん、今は近所のサラリーマンが主なんですよね。せっかくやるなら若い人や観光客にも知ってもらいたいけど、正直どうやったらいいか…"],
+          platform: ["TikTokとかインスタとか名前は聞くんですけど、正直よくわからないんですよね。娘がインスタやってるって言ってたかな。どれがいいんですか？", "うちの娘がTikTokが流行ってるって言ってました。どれか一つに絞るとしたら？"],
+          style: ["うちは老舗感というか、昔ながらの手作りの感じを出したいかな。ピカピカしたおしゃれな感じより、温かみのある雰囲気がいいですね。", "うちはね、チェーン店みたいなピカピカした感じじゃなくて、昔ながらの手作り感が売りなんですよ。その雰囲気を伝えたいかな。"],
+          frequency: ["どのくらい出せばいいんですかね？毎日は無理ですよ、うちは二人でやってるから。週1〜2本くらいが限界かな。", "うちは奥さんと二人でやってるから、動画の準備に時間かけられないんですよ。週1本くらいなら…できるかな？"],
+          budget: ["予算ですか…正直、あまり余裕はないんですよ。月に3〜5万円くらいなら出せるかな。効果がわかってきたら増やすことも考えますけど。", "いくらくらいかかるもんですかね？あまり大きな投資は怖くて…月5万くらいが上限かな。"],
+          content: ["うーん、ラーメンを作るところとか、スープの仕込みとか？25年続いてる秘伝のタレとかあるんですけど、見せても大丈夫なのかな。", "麺を茹でるところとか、チャーシューを切るところとか？美味しそうに見えるといいんですけどね。"],
+          competitor: ["最近、駅前に若い人向けのおしゃれなラーメン屋が2軒できたんですよ。うちは逆にそういう雰囲気じゃないんですが…それが差別化になりますかね？", "近くに新しいラーメン屋が増えてますね。でもうちは25年の歴史と秘伝のタレがあるから、そこは負けない。"],
+          timeline: ["いつから始められますか？できれば早いほうがいいんですが…来月くらいから始められれば。", "急ぎで始めたいわけじゃないですが、売上が落ちてるから早めにやりたいですね。"],
+          past: ["SNSはほとんど触ったことないです。Facebookのアカウントは作ったけど、5年くらい放置してますね（笑）。", "以前に息子に頼んでブログをやったんですけど、3回で止まりました。継続が難しくて…"],
+          concerns: ["正直続けられるか不安で…うちは二人しかいないから、動画に時間取られすぎると本業に影響しちゃって。", "本当に効果があるのか心配で。知り合いのラーメン屋がYouTubeやってたけど、全然だったって言ってたもんで。"],
+          default: ["うーん、そうですねえ。正直そこまで考えてなかったです。どうしたらいいですかね？", "なるほど、そういう観点もあるんですね。もう少し教えてもらえますか？", "難しいことを聞きますね…正直よくわからないですが、任せてもいいですか？"]
+        }
+      },
+      {
+        id: "salon", name: "鈴木 由紀", age: "34歳",
+        business: "美容室「BLOOM Hair」", location: "大阪・北区（梅田）",
+        avatar: "✂️", color: "#e91e8c",
+        background: "大阪・梅田近くの個人サロン。カラーリング得意。Instagram3,000フォロワーだが動画はほぼ未投稿。",
+        personality: "トレンドに敏感で話が早い。ブランドイメージへのこだわりが強い。予算感は現実的。",
+        difficulty: "中級", difficultyClass: "difficulty-intermediate",
+        responses: {
+          greeting: "こんにちは！お願いします。インスタはやってるんですけど、リールの動画がうまくいかなくて。写真投稿は反応あるのに、動画になると再生数が全然伸びなくて困ってるんですよね。",
+          goal: ["まずはフォロワーを今の3,000から1万人まで増やしたいです。あとは指名予約を増やすこと。新規のお客様が少なくて、リピーターばかりなんですよ。", "売上というより、私自身のブランディングをしっかりしたいんです。カラーが得意なんですが、遠方からでも来てもらえるような認知を作りたくて。"],
+          target: ["20代後半〜30代前半の女性です。トレンドに敏感でおしゃれに投資できる方。予算は1回2〜3万円くらいは使ってくれる層を狙いたい。", "今来てるお客さんは20〜40代の女性が多いですね。でももっと若い子にも来てもらいたい。"],
+          platform: ["インスタがメインです。うちのお客さんは絶対インスタで探してるから。TikTokも気になってるんですけど、イメージと合うかどうか…どう思いますか？", "インスタは続けていきたいです。TikTokはキャラ的に合わないかなと思ってたんですが、最近美容師さんで流行ってるみたいで気になってます。"],
+          style: ["おしゃれで洗練された感じがいいです。雑誌みたいな。シンプルだけどセンスある感じ。花や自然をモチーフにしたビジュアルが好きで。", "うちのサロンはホワイト×グリーン基調でインテリアを統一してるんです。その世界観を壊さないような動画がいい。"],
+          frequency: ["週2〜3本くらいは出せると思います。施術の合間とか、仕上がりを撮るのは慣れてるので。ただ編集に時間かかるのが悩みで。", "リール用の動画素材は毎日撮れるんですよ。でも編集が全然できなくて。週3本くらい出したいです。"],
+          budget: ["月10万円くらいなら出せます。今インスタ広告に月3万使ってて、あまり効果感じてないから、そこを回せないかなと思ってて。", "予算は月7〜10万くらい。集客に繋がるなら投資は惜しまないんですが。"],
+          content: ["やっぱりビフォーアフターは鉄板ですよね。あとは施術の過程、ハイライトカラーとか。お客さんのリアクションも使えれば。", "カラー施術の過程が見たいって声が多いんですよ。あとはヘアケアの方法とか、おうちでできるスタイリングのコツとか。"],
+          competitor: ["近くのサロンも最近インスタ頑張ってて、フォロワーが急に増えてて焦ってます。でもうちの差別化はカラーの技術力と居心地の良さ。価格で勝負したくないんですよ。", "競合は意識してますね。でも真似じゃなくて自分たちらしさを出したい。"],
+          timeline: ["できれば来月から始めたいです。今月末に新メニューが始まるので、そのタイミングで合わせたくて。", "早めにスタートしたいですね。夏が繁忙期なので、その前に軌道に乗せたくて。"],
+          past: ["インスタの写真投稿は3年くらいやってます。フォロワーは3,000人。リールは5〜6本試したんですが、全然伸びなくて。", "写真はうまくいってるんですが、動画は全然。一回TikTokアカウント作ったけど、1本投稿して辞めちゃいました。"],
+          concerns: ["私の顔を出すのが少し恥ずかしいというか…動画で話すのは慣れてなくて。顔出しなしでもいいですか？", "お客さんの顔の扱いが心配で。許可取るのが大変そうで…どうしてますか？"],
+          default: ["それは考えてなかったですね。どういうアプローチがいいと思いますか？", "なるほど！確かにそれは大事ですね。もう少し詳しく聞かせてもらえますか？", "うーん、そこはあまりこだわりないので、プロにお任せします。"]
+        }
+      },
+      {
+        id: "gym", name: "山本 健司", age: "42歳",
+        business: "パーソナルジム「FitForce」", location: "名古屋・栄",
+        avatar: "💪", color: "#1565c0",
+        background: "名古屋のパーソナルトレーニングジム。会員数80名。YouTube500登録者いるが更新停止中。ライバルジム急増。",
+        personality: "論理的で数字に強い。ROIを重視する。慎重だが決断は早い。",
+        difficulty: "中級", difficultyClass: "difficulty-intermediate",
+        responses: {
+          greeting: "よろしくお願いします。うちのジムはYouTubeを少しやってたんですが、更新が止まってて。ショート動画のほうが今は効果的と聞いて、試してみたいと思って連絡しました。",
+          goal: ["会員数を今の80名から120名に増やすのが目標です。体験入会のコンバージョン率を今の20%から30%以上に上げたい。", "数字で言うと、月の新規体験申し込みを今の10件から20件にしたいです。SNS経由の問い合わせが今ゼロに近いので、そこを作りたい。"],
+          target: ["ターゲットは30〜45歳の男女です。特にビジネスパーソンで健康意識が高い方。あとは産後ダイエットの女性も多いです。", "今の会員さんは30〜50代が多いですね。痩せたい、体を作りたい、腰痛を改善したいという目的で来てる方が多い。"],
+          platform: ["YouTubeはあるんですが更新が大変で止まってます。TikTokは若い子向けかなと思ってたんですが、最近40代の利用者も増えてると聞いて。どれが一番うちに向いてますか？", "どのプラットフォームが一番費用対効果いいですかね？一個に絞るとしたら。"],
+          style: ["うちは本格的なトレーニングをちゃんとやってるジムというイメージを出したい。ガチ系というか、本気で体を変えたい人向けというのを伝えたい。", "清潔感と専門性ですね。科学的なアプローチを前面に出したい。チャラい感じではなくて、信頼性を重視したい。"],
+          frequency: ["週3〜4本くらい出せると思います。トレーナーが3人いるので、交代でやれば。ただ何を撮ればいいかが問題で。", "月12〜15本くらいが理想ですね。週3は確保したい。"],
+          budget: ["月10〜15万は出せます。今チラシとかに月8万使ってるんですが、ほぼ効果なくて。そこを動画に切り替えようと思ってる。", "費用対効果で判断したいですね。月12万出して会員が5人増えれば回収できる計算なんで。まずは3ヶ月試して効果を見たい。"],
+          content: ["ビフォーアフターは絶対入れたいですね。あとはトレーニングのフォーム解説とか、よくある間違いとか。食事のアドバイス動画も反応いいって聞きました。", "トレーニング解説、食事アドバイス、会員の変化記録。この3パターンを回せればと思ってます。"],
+          competitor: ["近くに大手チェーンのジムが3軒あって、月額が安い。うちの差別化はパーソナル指導の質とアフターサポート。チェーン店では得られない密なコミュニケーションをアピールしたい。", "競合が増えてるのが課題です。でもうちは会員継続率が90%以上で、それが強み。"],
+          timeline: ["できれば今月中に契約して、来月から動き始めたい。夏前に成果を出したいので。", "3ヶ月計画で進めたいです。1ヶ月目は準備と撮影、2ヶ月目から投稿開始、3ヶ月目に効果測定。"],
+          past: ["YouTubeは去年1年間やって、500人登録者まで行きました。でも動画1本作るのに3時間かかって、更新できなくなりました。", "動画は少しやってましたが、再生数が伸び悩んで。ショートのほうが拡散しやすいと聞いて切り替えを考えてます。"],
+          concerns: ["効果が出るまでどのくらいかかりますか？3ヶ月以内に数字が出なければ判断を変えるかもしれない。", "会員さんのプライバシーが心配で。ビフォーアフター使いたいんですが、トラブルにならないか。"],
+          default: ["なるほど、それは考えてなかったです。データはありますか？", "理屈はわかります。具体的にどう実装しますか？", "もう少し詳しく教えてもらえますか？判断材料がほしい。"]
+        }
+      },
+      {
+        id: "realestate", name: "佐藤 雅子", age: "47歳",
+        business: "不動産会社「ハウスリンク」", location: "福岡・博多",
+        avatar: "🏡", color: "#2e7d32",
+        background: "福岡を拠点とする中規模不動産会社（社員20名）。SNS未経験で経営層は懐疑的。若手の提案でお試し相談。",
+        personality: "慎重派でリスク管理を重視。社内説得のために数字を求める。形式を重んじる。",
+        difficulty: "上級", difficultyClass: "difficulty-advanced",
+        responses: {
+          greeting: "よろしくお願いします。実は社内で若い者がSNSをやろうと言い出しまして。私自身はあまり必要性を感じていないんですが、まずは話だけ聞いてみようと思って。どんなことができるのか教えてもらえますか？",
+          goal: ["正直なところ、何が目標になるのかがよくわからなくて。売買の問い合わせを増やすのが最終的なゴールですが、SNSでそれが本当にできるのか…", "会社としての認知度向上でしょうか。あとは採用にも使えると若い者が言ってまして。問い合わせが月5件増えれば投資回収できる計算なんですが。"],
+          target: ["マイホームを探している30〜40代のファミリーが主なターゲットです。あとは単身の方向けの賃貸も扱ってます。この人たちがSNSを使って不動産を探すんですか？", "ターゲットはいくつかありまして。賃貸は大学生や若い社会人。売買は30〜50代のファミリー。"],
+          platform: ["不動産業界で効果があるSNSはどこですか？うちは全くやってないので、まず一番効果的なところから始めたいです。", "TikTok、インスタ、YouTube…種類が多くてどれにすべきか判断できません。不動産での成功事例があるプラットフォームを教えてください。"],
+          style: ["信頼性が一番大事です。不動産は高額な取引なので、チャラい感じは絶対NG。会社の信頼感と実績をしっかり伝えるスタイルがいい。", "会社のコーポレートカラーが紺と白なんです。その世界観に合わせて、プロフェッショナルな印象を維持したい。"],
+          frequency: ["週1〜2本が現実的じゃないかと思います。担当者を決めて、業務に支障が出ない範囲で。", "月4〜8本くらいを考えてます。毎日投稿は無理ですし、質が下がるのも困るので。"],
+          budget: ["月5〜8万円で考えています。半年やって効果が見えなければ撤退するかもしれません。KPIの設定をしっかりしてほしい。", "予算は月10万以内で。効果測定の方法を先に教えてください。何をもって成果とするかを明確にしないと社内説明ができなくて。"],
+          content: ["物件紹介動画が一番わかりやすいですね。あとは地域情報、エリアのいいところとか。ただ、プライバシーとか法律的な問題がないか心配で。", "物件の内覧動画、地域の住みやすさ紹介、不動産の豆知識。このあたりかなと思ってるんですが。"],
+          competitor: ["大手不動産会社はSNSをやってますよね。うちは中規模なので差別化が難しい面もあって。でも地域密着という強みはあります。", "競合他社のSNSはほとんどの同業者がまだやってないですね。先行者として始めるメリットはありますか？"],
+          timeline: ["まず3ヶ月間試験的にやってみて、効果を見て継続判断という形にしたいです。", "開始は来月以降ならいつでも。ただ社内の合意が必要なので、提案書みたいなものを作ってもらえると助かります。"],
+          past: ["会社としてのSNSは全く未経験です。個人でFacebookをやってる社員はいますが。", "ブログを昔やってたスタッフがいて、問い合わせが来た経験があると言ってました。動画となると全員未経験です。"],
+          concerns: ["一番心配なのは、炎上リスクとコンプライアンスです。不動産は規制が多い業界なので。", "SNSを始めると管理コストが上がりませんか？反応への返信とか、クレーム対応とか。そのリソースも考えないといけなくて。"],
+          default: ["なるほど。社内でその点をどう説明すればいいですか？", "リスクはどのくらいありますか？メリットとデメリットを整理してもらえますか？", "他の事例はありますか？参考にしたいので。"]
+        }
+      }
+    ];
+
+    // ===== KEY TOPICS =====
+    const KEY_TOPICS = [
+      { id: "goal",       label: "目標・KPI",            icon: "🎯", keywords: ["目標","kpi","売上","増やし","目的","効果","成果","達成","フォロワー","認知","集客","結果","どうなりたい","何を達成"] },
+      { id: "target",     label: "ターゲット層",          icon: "👥", keywords: ["ターゲット","客層","誰","年代","性別","層","お客さん","お客様","ユーザー","対象","どんな人","どういう人"] },
+      { id: "platform",   label: "SNSプラットフォーム",   icon: "📱", keywords: ["tiktok","インスタ","instagram","youtube","プラットフォーム","sns","どこ","媒体","チャンネル","どのsns","何を使"] },
+      { id: "style",      label: "動画スタイル・雰囲気",  icon: "🎨", keywords: ["雰囲気","スタイル","トーン","イメージ","ブランド","色","デザイン","感じ","世界観","どんなイメージ","どういう雰囲気"] },
+      { id: "frequency",  label: "投稿頻度",              icon: "📅", keywords: ["頻度","何本","何回","週に","月に","ペース","どのくらい","本数","回数"] },
+      { id: "budget",     label: "予算",                  icon: "💰", keywords: ["予算","費用","コスト","いくら","金額","価格","料金","投資","お金"] },
+      { id: "content",    label: "コンテンツ内容",        icon: "🎬", keywords: ["内容","コンテンツ","どんな動画","何を撮","見せたい","撮りたい","紹介したい","テーマ","何の動画"] },
+      { id: "competitor", label: "競合・差別化",          icon: "⚔️", keywords: ["競合","ライバル","他社","差別化","強み","特徴","売り","違い","他との"] },
+      { id: "timeline",   label: "開始時期・スケジュール", icon: "📆", keywords: ["いつから","スケジュール","時期","開始","いつ始め","期間","タイミング","何月"] },
+      { id: "past",       label: "過去の実績・経験",      icon: "📊", keywords: ["過去","今まで","実績","経験","やってきた","やったこと","これまで","歴史","もともと"] },
+    ];
+
+    // ===== CUSTOM RESPONSE GENERATOR =====
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function generateCustomResponses(f) {
+      const biz = f.business || "うちのビジネス";
+      const noSns = f.snsExp === "none";
+      const someSns = f.snsExp === "some";
+      const p = f.personality; // friendly | brand | data | cautious
+
+      const budgetText = { low: "月3〜5万円くらい", mid: "月5〜10万円くらい", high: "月10〜15万円くらい", vhigh: "月20万円以上も検討できます" }[f.budget] || "月5万円前後";
+      const goalText = { sales: `${biz}の売上と新規集客を増やしたい`, brand: `${biz}のブランド認知度を上げて、イメージをしっかり作りたい`, followers: "フォロワーを増やしてSNSの影響力をつけたい", hiring: "採用と会社の認知度向上につなげたい" }[f.concern] || `${biz}の集客を増やしたい`;
+      const snsDesc = noSns ? "SNSはほとんど未経験なんですが" : someSns ? "少し触ったことはあるんですが" : "ある程度SNSはやってるんですが";
+
+      const greetings = {
+        friendly: `あ、どうもよろしくお願いします！${biz}をやってるんですが、${goalText}と思ってて。${snsDesc}、相談に来ました。どんなことができるか教えてもらえますか？`,
+        brand: `よろしくお願いします！${biz}の動画運用をお願いしたいと思って来ました。${goalText}のが目標なんですが、うちのブランドイメージを大切にしながらやっていきたくて。`,
+        data: `よろしくお願いします。${biz}の集客のためにショート動画を検討しています。${goalText}のが目標なんですが、具体的にどういう成果が出るか、まずは教えてもらえますか？`,
+        cautious: `よろしくお願いします。実は${biz}での動画運用を検討しているんですが、正直まだ半信半疑で。${snsDesc}、まずは話を聞いてから判断しようと思って来ました。`
+      };
+
+      const goals = {
+        friendly: [`そうですね、${goalText}のが一番です。正直どうすれば達成できるかよくわからないので、教えてもらいながら進めたいです。`, `${goalText}ですね。あとは${biz}のことをもっとたくさんの人に知ってもらいたいというか、そういう気持ちもあります。`],
+        brand: [`${goalText}ですね。ただ、数字を追うというより、${biz}らしい世界観を作りながら、ファンになってもらいたい、というイメージが強いかな。`, `フォロワーを増やすよりも、質の高いフォロワーを増やしたいです。${biz}の価値観に共感してくれる人を集めたいというか。`],
+        data: [`具体的には${goalText}で、数字で言うと月に問い合わせを○件増やしたいイメージです。${biz}の投資対効果を見ながら、数字が出れば拡大していきたい。`, `${goalText}が目標で、まず3ヶ月でどういう結果が出るかを見たいです。KPIを一緒に設定してもらえますか？`],
+        cautious: [`目標はわかるんですが、本当に動画で${goalText}のかどうかが半信半疑で。まず効果が出る仕組みを教えてもらえますか？`, `${goalText}ができれば理想ですが、リスクも心配で。どういう場合に失敗するのかも教えてもらえると判断しやすいです。`]
+      };
+
+      const targets = {
+        friendly: [`うちのお客さんは${f.targetAge || "30〜40代"}が多いですね。でもSNSやるならもっと若い層にも届けたいなと思って。`, `正直、どんな人に来てほしいかってあまり考えたことなかったですが…${f.targetAge || "幅広い年代"}の方に来てもらえれば。`],
+        brand: [`ターゲットは${f.targetAge || "20〜35歳"}の方で、トレンドやブランドに敏感な層です。価格より価値を重視してくれる人に届けたい。`, `うちの世界観に共感してくれる方、${f.targetAge || "20〜40代"}の感度の高い方を狙っていきたいですね。`],
+        data: [`ターゲットは${f.targetAge || "30〜45歳"}の方です。${biz}のサービスの課題を持っている方に効率よくリーチしたい。どの層が一番コンバージョン率高いか、データはありますか？`, `ターゲットを絞るとしたら${f.targetAge || "30〜40代"}のビジネスパーソンかなと思ってます。その層が使うSNSはどれが多いですか？`],
+        cautious: [`今の客層は${f.targetAge || "30〜50代"}が中心なんですが、SNSで全く違う層にアプローチするのは少し怖くて。今の客層を守りながら新しい層も開拓できますか？`, `ターゲットについては既存のお客様の層（${f.targetAge || "30〜40代"}）を大切にしながら、その近い層にリーチしたいです。`]
+      };
+
+      const platforms = {
+        friendly: [
+          noSns ? `TikTokとかインスタとか名前は聞くんですが、正直どれがいいのか全然わからなくて。${biz}にはどれが向いてますかね？` : `インスタは少し触ったことがあるんですが、他にもやるべきですか？どれが一番効果的ですか？`,
+          `どれか一つに絞るとしたらどこになりますか？全部やるのは大変そうで。`
+        ],
+        brand: [`インスタが世界観的に一番合ってると思うんですが、${biz}的にはどうですか？TikTokはイメージが合わない気がして。`, `ブランドの雰囲気を保てるプラットフォームがいいんですが、インスタ以外でおすすめはありますか？`],
+        data: [`${biz}のターゲット層が一番使っているプラットフォームはどこですか？データで判断したいので。`, `費用対効果で考えると、どのプラットフォームが一番効率よく結果が出ますか？一個に集中したい。`],
+        cautious: [`プラットフォームが多くてどれにすべきか判断できません。リスクが低くて効果が出やすいものから始めたいんですが。`, `${noSns ? "SNS自体初めてなので" : "あまり詳しくないので"}、管理が大変にならないよう一つから始めたいです。どれがいいですか？`]
+      };
+
+      const styles = {
+        friendly: [`特にこだわりはないんですが、${biz}らしいというか、温かみのある感じがいいかな。あとは見やすければOKで、あとはお任せします。`, `どんな感じがいいかなぁ。明るくて親しみやすい感じがいいかな？あまり堅くないほうが。`],
+        brand: [`${biz}のブランドカラーや世界観を大事にしたいんです。シンプルでおしゃれな感じ、雑誌みたいな雰囲気が理想ですね。`, `うちはデザインにこだわっていて、チープに見えるのは絶対NG。高品質感を出しつつも、親しみやすさも大事にしたい。`],
+        data: [`スタイルより中身重視で。見やすくて情報が伝わりやすければいいです。${biz}のサービスの価値が明確に伝わる動画がいい。`, `競合他社の動画で反応が良かったスタイルがあれば参考にしたいですが、${biz}らしさも出したいですね。`],
+        cautious: [`あまり派手すぎるのは${biz}のイメージに合わないので、落ち着いた信頼感のあるスタイルがいいです。`, `プロフェッショナルな印象を維持したい。チャラい感じや流行りすぎる演出は避けたいですね。`]
+      };
+
+      const frequencies = {
+        friendly: [`どのくらい出せばいいですかね？毎日は難しいですが、週1〜2本くらいならできそうです。`, `あまり無理せずに続けられる本数がいいですね。月4〜8本くらいを目安にしたいかな。`],
+        brand: [`週2〜3本くらい出したいですね。素材は作れるんですが、クオリティを保ちながら続けるのが課題で。`, `本数より質を大切にしたいので、週1本でも内容がしっかりしたものを出したいです。`],
+        data: [`週3〜4本くらいで、まず3ヶ月データを取ってみたいです。反応を見ながら増減させたい。`, `投稿頻度と結果の相関を見たいので、まずは週2本で始めて、効果があれば増やしていく方針で。`],
+        cautious: [`週1〜2本が限界だと思います。担当者の負担を増やしたくないので、継続できる範囲でやりたい。`, `最初は月4本くらいから始めて、慣れてきたら増やすという段階的な進め方がいいです。`]
+      };
+
+      const budgets = {
+        friendly: [`予算ですか…${budgetText}くらいは出せます。効果が出てきたら増やすことも考えますが、最初は様子見で。`, `あまり大きな投資は怖くて…${budgetText}くらいなら頑張れるかな。`],
+        brand: [`${budgetText}は出せます。ただ安かろう悪かろうは困るので、クオリティに見合った投資はしたいです。`, `予算は${budgetText}で考えています。デザインや編集の質は落としたくないので、そのぶんしっかりお願いしたいですね。`],
+        data: [`${budgetText}で3ヶ月試して、ROIが合えば継続・拡大したいです。まず数字を見てから判断します。`, `月の投資額と期待リターンを先に計算したいので、${budgetText}の場合どういう成果が見込めますか？`],
+        cautious: [`${budgetText}くらいが上限です。まず試験的にやってみて、効果が出れば継続判断します。撤退ラインも決めておきたいです。`, `リスクを抑えるために、まずは少額の${budgetText}から始めたい。効果測定のやり方も教えてもらえますか？`]
+      };
+
+      const contents = {
+        friendly: [`${biz}の魅力が伝わる動画がいいですね。作っているところとか、お客さんの笑顔とか。あとはビフォーアフターとかも面白そうかな。`, `正直どんな動画がいいかよくわからないんですが…${biz}の日常とかも面白いですかね？お任せします！`],
+        brand: [`${biz}の世界観が伝わるコンテンツがいいですね。製品やサービスの見せ方にはこだわりたい。あとはストーリー性のある動画も気になってます。`, `ビフォーアフターや商品・サービスの魅力を見せる動画、あとは${biz}の裏側みたいなコンテンツも考えてます。`],
+        data: [`コンバージョンにつながるコンテンツ優先で。体験談とか実績を見せる動画が効果的と聞いてますが、実際どうですか？`, `教育コンテンツとプロモーション動画の比率はどのくらいがベストですか？${biz}のサービス説明動画も入れたい。`],
+        cautious: [`${biz}の安心感や信頼性が伝わる内容がいいです。実績やお客様の声とか。ただ個人情報には気をつけたいので、そこの扱い方も教えてください。`, `まずはシンプルな内容から始めたいです。${biz}の紹介動画とか、よくある質問への回答とか。リスクが低い内容から。`]
+      };
+
+      const competitors = {
+        friendly: [`競合ですか…同じ業種のところはいくつかあるんですが、正直あまり意識してなかったです。うちの強みって何になるんですかね？`, `同じような${biz}はいくつかあるんですが、うちの一番の売りは${f.strength || "お客様への丁寧な対応"}だと思います。それをうまく動画で伝えたいですね。`],
+        brand: [`競合も動画をやってるところが増えてて、差別化しないといけないと思ってます。うちの強みは${f.strength || "ブランドの世界観とこだわり"}で、そこを出したい。`, `競合との違いは${f.strength || "クオリティと独自性"}だと思ってます。価格で勝負せず、価値で選んでもらえるポジションを作りたい。`],
+        data: [`競合分析はしてますか？うちと同業の中でSNS運用がうまくいってる事例があれば教えてもらいたい。真似るところは真似て、差別化できるところは明確にしたい。`, `競合との差別化ポイントは${f.strength || "サービスの質とアフターサポート"}です。それを数字や実績で証明できるコンテンツを作りたいですね。`],
+        cautious: [`競合が何かやってリスクが出た事例とかありますか？そういうことは避けたいので。うちの差別化は${f.strength || "地域密着と信頼性"}なんですが、それを安全に発信したい。`, `同業他社のSNS運用で失敗した事例はありますか？参考にして同じ轍を踏まないようにしたいです。`]
+      };
+
+      const timelines = {
+        friendly: [`いつから始められますか？できれば早めがいいですが、急ぎでもないので、準備が整ってからで。`, `来月か再来月くらいを目安にしてます。スケジュール感を教えてもらえますか？`],
+        brand: [`新しいコレクション（シーズン）に合わせてスタートしたいので、${f.startTiming || "来月"}くらいから準備を始めたい。`, `できれば${f.startTiming || "2〜3ヶ月以内"}には軌道に乗せたいですね。シーズンものなので時期が大事で。`],
+        data: [`${f.startTiming || "来月"}スタートで3ヶ月後に中間評価、6ヶ月後に本格評価という計画で考えてます。`, `できるだけ早く始めたいです。${f.startTiming || "今月中"}に契約できれば、来月から動けますか？`],
+        cautious: [`まず3ヶ月の試験運用から始めて、様子を見てから継続判断したいです。${f.startTiming || "来月"}くらいから準備できますか？`, `スタートは${f.startTiming || "来月以降"}で大丈夫ですが、社内の承認プロセスがあるので、今日の話をまとめた提案書を作ってもらえると助かります。`]
+      };
+
+      const pasts = {
+        friendly: [
+          noSns ? `SNSはほとんどやったことないです。アカウントは持ってますが、あまり使ってなくて。` : someSns ? `少し投稿したことはあるんですが、続けられなくて。更新が止まってる状態です。` : `ある程度SNSは使ってるんですが、動画は全然やったことなくて。`,
+          `過去にホームページを作ったくらいで、SNSや動画は全くの初心者です。`
+        ],
+        brand: [
+          noSns ? `SNSはまだほとんどやれてないんですが、始めたいとずっと思ってました。` : `インスタは少し投稿してますが、フォロワーがなかなか増えなくて。動画は試してみたけどうまくいかなかったです。`,
+          someSns ? `SNSは個人アカウントで少し経験がある程度で、${biz}としては本格的にやるのは初めてです。` : `過去に知人に頼んで少し動画を作ってもらったことがあります。ただ、継続的な運用には繋げられなかった。`
+        ],
+        data: [
+          someSns ? `過去に自分でSNSをやってみましたが、再生数やフォロワーがなかなか伸びなくて。データを見ると投稿のやり方に問題があったのかなと。` : noSns ? `SNSは未経験ですが、他社の成功事例は調べていて、うちでも同じことができるか確認したいです。` : `既存のSNSアカウントはありますが、専門家に頼んで本格的に運用するのは初めてです。`,
+          `過去に広告は試したことがあります。${biz}でのSNSの自然流入を増やしたいと思って今回相談しました。`
+        ],
+        cautious: [
+          noSns ? `SNSは全くやったことがないので、リスクが心配で。失敗した事例とかあれば教えてもらえますか？` : `少しやったことはあるんですが、効果が見えなくて止めました。今回は専門家にお願いすることで違う結果を期待しています。`,
+          `社内でブログを試したことがあるんですが、途中で止まってしまいました。継続できるか、それが一番の不安です。`
+        ]
+      };
+
+      const concerns_list = {
+        friendly: [`正直、続けられるか不安で…自分たちでできることって何かありますか？`, `費用のことが心配で。効果がなかったらどうなりますか？`],
+        brand: [`クオリティが落ちたものを出すくらいなら出さないほうがいいと思っていて。そのへんの基準はどう決めますか？`, `動画の世界観が${biz}のブランドイメージと合わなかったら怖くて。修正や調整はどのくらいできますか？`],
+        data: [`成果が出るまでどのくらいかかりますか？3ヶ月で変化がなければ見直しを考えたい。`, `KPIが達成できなかった場合、どう改善していくか、そのプロセスを教えてもらえますか？`],
+        cautious: [`炎上や誤解を招く投稿になるリスクはどう防ぎますか？`, `始めたはいいが途中で止まるのが一番怖くて。それを防ぐ仕組みはありますか？`]
+      };
+
+      const defaults = {
+        friendly: [`うーん、そこはあまり考えてなかったですね。どうしたらいいですかね？`, `なるほど！そういう観点もあるんですね。もう少し教えてもらえますか？`, `それはお任せしていいですか？よくわからなくて。`],
+        brand: [`それについてはこだわりたいですね。具体的にどういう提案になりますか？`, `なるほど、${biz}らしさを大切にしながらどう進めますか？`, `そこは重要な観点ですね。例を見せてもらえますか？`],
+        data: [`データや事例はありますか？判断する材料がほしいです。`, `なるほど。それをやった場合の費用と期待効果を教えてもらえますか？`, `具体的な数字で示してもらえると判断しやすいです。`],
+        cautious: [`そこはリスクはありますか？問題ない範囲でやりたいので。`, `なるほど。社内でどう説明すればいいですか？`, `少し慎重に考えたいんですが、もう少し詳しく教えてもらえますか？`]
+      };
+
+      return {
+        greeting: greetings[p] || greetings.friendly,
+        goal: goals[p] || goals.friendly,
+        target: targets[p] || targets.friendly,
+        platform: platforms[p] || platforms.friendly,
+        style: styles[p] || styles.friendly,
+        frequency: frequencies[p] || frequencies.friendly,
+        budget: budgets[p] || budgets.friendly,
+        content: contents[p] || contents.friendly,
+        competitor: competitors[p] || competitors.friendly,
+        timeline: timelines[p] || timelines.friendly,
+        past: pasts[p] || pasts.friendly,
+        concerns: concerns_list[p] || concerns_list.friendly,
+        default: defaults[p] || defaults.friendly
+      };
+    }
+
+    // ===== RESPONSE ENGINE =====
+
+    // トピック判定ルール（優先度順）
+    const TOPIC_RULES = [
+      { id: "goal",       kws: ["目標","kpi","kpi","売上を","増やしたい","目的","何を達成","どうなりたい","どんな結果","成果","達成したい","集客したい","増やしたい","何件","フォロワーを","何人","認知を"] },
+      { id: "target",     kws: ["ターゲット","客層","どんな人","どんな方","誰に","年代","性別","お客さん層","どういう人","来てほしい","届けたい","対象","ユーザー層","どんなお客"] },
+      { id: "platform",   kws: ["tiktok","インスタ","instagram","youtube","プラットフォーム","どのsns","どのsnS","何を使","どのアプリ","媒体","どこで","どのチャンネル","何のsns"] },
+      { id: "style",      kws: ["雰囲気","どんな感じ","スタイル","世界観","トーン","イメージ","ブランド","見た目","どんな動画","どういう雰囲気","どんな印象","ビジュアル"] },
+      { id: "frequency",  kws: ["頻度","何本","何回","週に","月に","本数","どのくらい投稿","ペース","どれくらい","何週","毎日","毎週","更新"] },
+      { id: "budget",     kws: ["予算","費用","コスト","いくら","金額","価格","料金","お金","月々","月額","投資"] },
+      { id: "content",    kws: ["内容","コンテンツ","何を撮","見せたい","撮りたい","テーマ","どんな動画を","何の動画","紹介したい","何を発信","何を見せ"] },
+      { id: "competitor", kws: ["競合","ライバル","他社","差別化","強み","うちの売り","他と違う","他のお店","特徴","何が強み","何が違う"] },
+      { id: "timeline",   kws: ["いつから","スケジュール","いつ始め","いつ頃","何月","時期","タイミング","どのくらいで","いつスタート"] },
+      { id: "past",       kws: ["過去","今まで","実績","経験","これまで","やったこと","やってきた","やってみた","試したこと","歴史"] },
+      { id: "concerns",   kws: ["心配","不安","懸念","リスク","問題","難しい","怖い","失敗","炎上","うまくいかない"] },
+    ];
+
+    function detectTopic(lower) {
+      for (const rule of TOPIC_RULES) {
+        if (rule.kws.some(k => lower.includes(k))) return rule.id;
+      }
+      return null;
+    }
+
+    // フォローアップ（相槌・深掘り）パターン
+    const FOLLOWUP_RE = /^(なるほど|そうなんですね|そうですか|へえ|ふむ|はい|ありがとう|わかりました|了解|確かに|なんと|すごい|おお|それで|続き|もっと|詳しく|具体的に|例えば|もう少し|教えて|説明して|聞かせて|聞きたい|もっと聞|もう一度|同じように|それって|その|ちなみに)/;
+
+    // 直前のクライアント発言がどのトピックか逆引き
+    function detectLastTopic(clientText) {
+      if (!clientText) return null;
+      const lower = clientText.toLowerCase();
+      for (const rule of TOPIC_RULES) {
+        if (rule.kws.some(k => lower.includes(k))) return rule.id;
+      }
+      return null;
+    }
+
+    // 質問文から自然な受け答えの冒頭を生成
+    const TOPIC_OPENERS = {
+      goal:       ["目標ですね、", "目的のことですよね。", "そこが大事なところで、", "ゴールのことですね、"],
+      target:     ["ターゲットですね。", "どんな方に来てほしいか、ですよね。", "客層については、", "お客さんの話ですね、"],
+      platform:   ["プラットフォームですか、", "どのSNSか、ということですね。", "媒体のことですか、", "どこでやるか、ですね。"],
+      style:      ["雰囲気についてですね。", "どんな感じにするか…ですよね。", "世界観のことですか、", "イメージのことですね、"],
+      frequency:  ["投稿の頻度ですね、", "どのくらい出すか…ですよね。", "本数のことですか、", "ペースのことですね、"],
+      budget:     ["予算のことですね。", "費用については、", "いくらくらいか、ですよね。", "お金の話ですね、"],
+      content:    ["コンテンツの内容ですね。", "何を撮るか…ですよね。", "どんな動画か、ということですね、", "発信内容のことですか、"],
+      competitor: ["競合との違いですね。", "差別化のことですか、", "強みのことですね、", "他社との比較ですね、"],
+      timeline:   ["いつから始めるか、ですね。", "時期のことですか、", "スタートのタイミングですね、", "スケジュールのことですね、"],
+      past:       ["これまでの経験ですね、", "過去にやったことがあるかどうか、ですね。", "実績のことですか、"],
+      concerns:   ["不安なことがあるんですね、", "心配な点ですか、", "リスクのことですね、"],
+    };
+
+    // 直前に同トピックの応答があれば別のバリアントを選ぶ
+    function pickFresh(responses, lastText) {
+      const others = responses.filter(r => r !== lastText && !lastText?.includes(r.slice(0, 12)));
+      return others.length > 0 ? pick(others) : pick(responses);
+    }
+
+    function getResponse(client, message, history) {
+      const lower = message.toLowerCase().trim();
+      const hist = history || [];
+
+      // 直前のクライアント・ユーザー発言
+      const prevClientMsgs = hist.filter(m => m.role === 'client');
+      const lastClientText = prevClientMsgs[prevClientMsgs.length - 1]?.text || '';
+      const prevUserMsgs   = hist.filter(m => m.role === 'user');
+      const lastUserText   = prevUserMsgs[prevUserMsgs.length - 2]?.text || ''; // 今回の一個前
+
+      // ── フォローアップ判定（短文 or 相槌 or 「もっと教えて」系） ──
+      const isFollowUp = FOLLOWUP_RE.test(lower) || lower.length <= 10;
+      if (isFollowUp) {
+        // 直前クライアントと同じトピックを深掘り
+        const lastTopic = detectLastTopic(lastClientText);
+        if (lastTopic && client.responses[lastTopic]) {
+          const pool = client.responses[lastTopic];
+          const fresh = pickFresh(pool, lastClientText);
+          const bridges = ["そうそう、", "もう少し詳しく言うと、", "付け加えると、", "そうですね、続きで言うと、"];
+          return pick(bridges) + fresh;
+        }
+        // トピック特定できなければ自然なつなぎ
+        const openEnded = ["もう少し具体的に話すと、", "そうですね、", "付け加えると、"];
+        return pick(openEnded) + pick(client.responses.default);
+      }
+
+      // ── トピック判定 ──
+      const topic = detectTopic(lower);
+      const pool  = topic ? client.responses[topic] : null;
+
+      if (!pool) {
+        // トピック不明：質問意図を汲んだ自然な返し
+        const clarify = ["うーん…どういう意味ですか？もう少し具体的に教えてもらえますか？", "ちょっとよくわからなかったんですが、もう一度聞いてもいいですか？", "すみません、もう少し詳しく聞かせてもらえると助かります。"];
+        return pick(clarify);
+      }
+
+      // 既に話したトピックへの再質問 → 別バリアントで深掘り
+      const base = pickFresh(pool, lastClientText);
+
+      // 冒頭に自然な受け答えを付加（50%の確率で、かつ重複しない場合）
+      const openers = TOPIC_OPENERS[topic] || [];
+      const useOpener = openers.length > 0 && Math.random() < 0.6;
+      // 応答がすでに「そう」「うーん」等で始まる場合はオープナー不要
+      const alreadyHasFiller = /^(そう|うーん|まあ|正直|あ、|えっと|ちょっと|実は|なんか|はい|ええ)/.test(base);
+      const opener = (useOpener && !alreadyHasFiller) ? pick(openers) : "";
+
+      return opener + base;
+    }
+
+    function detectCoveredTopics(message) {
+      const lower = message.toLowerCase();
+      const covered = new Set();
+      KEY_TOPICS.forEach(t => { if (t.keywords.some(k => lower.includes(k))) covered.add(t.id); });
+      return covered;
+    }
+
+    // ===== 目的別重みテーブル =====
+    // 1.5=最重要 / 1.0=重要 / 0.6=あると良い / 0.3=補足
+    const GOAL_WEIGHTS = {
+      acquisition: { goal:1.2, target:1.5, platform:1.5, content:1.3, competitor:1.2, frequency:1.0, style:0.8, budget:0.8, past:0.5, timeline:0.3 },
+      recruitment:  { goal:1.2, target:1.5, content:1.5, style:1.3, platform:1.0, past:0.8, frequency:0.7, competitor:0.7, budget:0.5, timeline:0.3 },
+      sales:        { goal:1.2, target:1.5, content:1.5, competitor:1.3, platform:1.2, budget:1.0, style:0.8, frequency:0.8, past:0.5, timeline:0.3 },
+      branding:     { goal:1.2, style:1.5, content:1.5, target:1.2, platform:1.2, competitor:1.0, frequency:1.0, past:0.7, budget:0.5, timeline:0.3 },
+      general:      { goal:1.0, target:1.0, platform:1.0, content:1.0, competitor:1.0, frequency:1.0, style:1.0, budget:1.0, past:1.0, timeline:1.0 },
+    };
+
+    const GOAL_LABELS = {
+      acquisition: { label: '集客・新規顧客獲得', icon: '🧲' },
+      recruitment:  { label: '採用・人材確保',     icon: '🤝' },
+      sales:        { label: '売上・販売促進',      icon: '📈' },
+      branding:     { label: 'ブランディング・認知', icon: '✨' },
+      general:      { label: '総合',               icon: '📋' },
+    };
+
+    function detectGoal(messages, client) {
+      const text = [...(messages || []).map(m => m.text), client.background || ''].join(' ').toLowerCase();
+      const patterns = {
+        acquisition: ['集客','来店','来てほしい','来客','新規','お客さんを','お客様を','呼びたい','集めたい','予約','来店者'],
+        recruitment:  ['採用','求人','人材','スタッフ','仲間','従業員','採用したい','人を集め','社員'],
+        sales:        ['売上','販売','売り上げ','購入','ec','商品','売れ','売りたい','注文','売上を上げ'],
+        branding:     ['ブランド','ブランディング','知名度','認知度','イメージ','世界観','ブランド力'],
+      };
+      const scores = Object.fromEntries(Object.keys(patterns).map(k => [k, 0]));
+      for (const [goal, kws] of Object.entries(patterns)) {
+        for (const kw of kws) { if (text.includes(kw)) scores[goal]++; }
+      }
+      const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+      return top[1] > 0 ? top[0] : 'general';
+    }
+
+    function calcWeightedScore(coveredTopics, goal) {
+      const weights = GOAL_WEIGHTS[goal] || GOAL_WEIGHTS.general;
+      let total = 0, earned = 0;
+      for (const t of KEY_TOPICS) {
+        const w = weights[t.id] || 1.0;
+        total += w;
+        if (coveredTopics.has(t.id)) earned += w;
+      }
+      return Math.round((earned / total) * 100);
+    }
+
+    function getTopicImportance(topicId, goal) {
+      const w = (GOAL_WEIGHTS[goal] || GOAL_WEIGHTS.general)[topicId] || 1.0;
+      if (w >= 1.3) return 'critical';
+      if (w >= 0.9) return 'important';
+      return 'bonus';
+    }
+
+    function getGrade(score) {
+      if (score >= 90) return { grade: "S", color: "#ffd700", label: "パーフェクト！" };
+      if (score >= 70) return { grade: "A", color: "#4caf50", label: "素晴らしい！" };
+      if (score >= 50) return { grade: "B", color: "#2196f3", label: "まずまずです" };
+      if (score >= 30) return { grade: "C", color: "#ff9800", label: "もう少し！" };
+      return { grade: "D", color: "#f44336", label: "要練習！" };
+    }
+
+    const TOPIC_TIPS = {
+      goal: "「今回の一番の目標は何ですか？」「どういう状態になれば成功ですか？」",
+      target: "「どんな方に来てほしい（見てほしい）ですか？」「理想のお客様・候補者像は？」",
+      platform: "「どのSNSをお考えですか？」「お客様が使っているプラットフォームはどこですか？」",
+      style: "「どんな雰囲気の動画が理想ですか？」「参考にしたいアカウントはありますか？」",
+      frequency: "「週に何本くらい投稿したいですか？」「継続できるペースはどのくらいですか？」",
+      budget: "「月々のご予算はどのくらいをお考えですか？」",
+      content: "「どんな内容の動画を作りたいですか？」「一番伝えたいことは何ですか？」",
+      competitor: "「競合他社と比べてどこが強みですか？」「他社との違いは何だと思いますか？」",
+      timeline: "「いつ頃からスタートしたいですか？」",
+      past: "「これまでSNSを運用したことはありますか？」「過去に動画を作ったことは？」",
+    };
+
+    const GOAL_FEEDBACK = {
+      acquisition: {
+        perfect: (name) => `${name}様の集客目的に必要な情報をすべて引き出せました！ターゲット・プラットフォーム・コンテンツが揃っており、効果的な提案ができる状態です。`,
+        partial:  (name, critical) => `集客目的のヒアリングとして、${critical.length > 0 ? `「${critical.join('・')}」など` : ''}核心的な情報がまだ不足しています。集客には「誰に・どこで・何を見せるか」が揃って初めて提案できます。`,
+      },
+      recruitment: {
+        perfect: (name) => `${name}様の採用目的に必要な情報をすべて引き出せました！どんな人材を求めているかが明確になり、採用ブランディングの提案ができます。`,
+        partial:  (name, critical) => `採用目的のヒアリングとして、${critical.length > 0 ? `「${critical.join('・')}」など` : ''}求める人材像と発信内容の確認が不十分です。採用動画では「どんな人に来てほしいか」「何を見せるか」が最重要です。`,
+      },
+      sales: {
+        perfect: (name) => `${name}様の売上目的に必要な情報をすべて引き出せました！購買ターゲット・競合優位性・コンテンツが揃い、ROIを意識した提案ができます。`,
+        partial:  (name, critical) => `売上目的のヒアリングとして、${critical.length > 0 ? `「${critical.join('・')}」など` : ''}購買を促すために必要な情報が不足しています。売上に直結する動画には「誰が・なぜ買うか」の解像度が必要です。`,
+      },
+      branding: {
+        perfect: (name) => `${name}様のブランディング目的に必要な情報をすべて引き出せました！世界観・ターゲット・プラットフォームが揃い、一貫したブランド発信の提案ができます。`,
+        partial:  (name, critical) => `ブランディング目的のヒアリングとして、${critical.length > 0 ? `「${critical.join('・')}」など` : ''}ブランドの世界観や競合優位性の確認が不足しています。`,
+      },
+      general: {
+        perfect: (name) => `完璧なヒアリングです！${name}様から必要な情報をすべて引き出せました。`,
+        partial:  (name, critical) => `${critical.length > 0 ? `「${critical.join('・')}」など` : '聞けていない項目'}の確認が不足しています。`,
+      },
+    };
+
+    function buildFeedback(coveredTopics, goal, clientName) {
+      const weights = GOAL_WEIGHTS[goal] || GOAL_WEIGHTS.general;
+      const missedCritical = KEY_TOPICS
+        .filter(t => !coveredTopics.has(t.id) && (weights[t.id] || 1.0) >= 1.3)
+        .map(t => t.label);
+      const missedImportant = KEY_TOPICS
+        .filter(t => !coveredTopics.has(t.id) && (weights[t.id] || 1.0) >= 0.9 && (weights[t.id] || 1.0) < 1.3)
+        .map(t => t.label);
+      const allMissed = KEY_TOPICS.filter(t => !coveredTopics.has(t.id));
+      const fb = GOAL_FEEDBACK[goal] || GOAL_FEEDBACK.general;
+      const isPerfect = allMissed.length === 0;
+      let text = isPerfect ? fb.perfect(clientName) : fb.partial(clientName, missedCritical);
+      if (!isPerfect && allMissed.length > 0) {
+        const hints = allMissed.slice(0, 3).map(t => TOPIC_TIPS[t.id]).filter(Boolean);
+        if (hints.length) text += `\n\n次回試したい質問例：\n・${hints.join('\n・')}`;
+      }
+      return text;
+    }
+
+    // ===== DIFFICULTY SYSTEM =====
+    const DIFFICULTIES = [
+      { id: 'easy',   emoji: '🟢', label: '優しい', desc: '丁寧に答えてくれる\n情報を積極的に共有' },
+      { id: 'normal', emoji: '🟡', label: '普通',   desc: '標準的な反応\n適度に考えて答える' },
+      { id: 'hard',   emoji: '🔴', label: '難しい', desc: '答えが曖昧・脱線\n追い質問が必要' },
+    ];
+
+    const EASY_BONUSES = [
+      "あ、あと何か他にも気になることがあれば、何でも聞いてくださいね。",
+      "遠慮なく何でも聞いてもらえると嬉しいです。",
+      "他にも話せることはいろいろあるので、もっと聞いてもらっていいですよ。",
+      "そうそう、それ以外にも聞いてほしいことがあって…でも、まず何か質問ありますか？",
+    ];
+
+    const HARD_DEFLECTS = [
+      "うーん…そこはまだよく考えてなくて。",
+      "難しい質問ですね。一概には言えないんですが…",
+      "正直、そこはまだ整理できてないんですよね。",
+      "えっと、どういう意味ですか？もう少し具体的に聞いてもらえますか？",
+      "そこは…まあ、いろいろあって。",
+    ];
+
+    const HARD_TANGENTS = [
+      "そういえば全然違う話なんですけど、",
+      "あ、そうだ話変わるんですけど、",
+    ];
+
+    const HARD_COUNTERS = [
+      "他のお客さんはそのへんどうしてるんですか？ ",
+      "それって、一般的にはどういうのが多いですか？ ",
+      "うちみたいなケースだと、どう考えればいいんですかね。 ",
+    ];
+
+    function wrapResponse(response, difficulty) {
+      if (difficulty === 'easy') {
+        if (Math.random() < 0.45) {
+          return response + "\n\n" + pick(EASY_BONUSES);
+        }
+        return response;
+      }
+
+      if (difficulty === 'hard') {
+        const r = Math.random();
+        const sentences = response.split('。').filter(s => s.trim());
+        const half = Math.max(1, Math.floor(sentences.length / 2));
+
+        if (r < 0.22) {
+          // Deflect + give only half the answer
+          const truncated = sentences.slice(0, half).join('。') + (half > 0 ? '。' : '');
+          return pick(HARD_DEFLECTS) + "…" + truncated;
+        }
+        if (r < 0.35) {
+          // Counter-question first, then short answer
+          const truncated = sentences.slice(0, half).join('。') + '。';
+          return pick(HARD_COUNTERS) + truncated;
+        }
+        if (r < 0.45) {
+          // Go slightly off-topic, then give vague answer
+          return pick(HARD_TANGENTS) + sentences[0] + '。…まあ、そういう感じですかね。';
+        }
+        // Otherwise just truncate to ~60% of response
+        const keep = Math.max(1, Math.ceil(sentences.length * 0.6));
+        return sentences.slice(0, keep).join('。') + '。';
+      }
+
+      return response; // normal
+    }
+
+    // ===== RANDOM CLIENT GENERATOR =====
+    const RANDOM_BUSINESS_POOL = [
+      { business: "カフェ・コーヒーショップ", concern: "sales", targetAge: "20〜40代", strength: "手作りスイーツと居心地の良い空間" },
+      { business: "イタリアンレストラン", concern: "sales", targetAge: "30〜50代", strength: "本格的なパスタと自然派ワイン" },
+      { business: "焼肉・韓国料理店", concern: "sales", targetAge: "20〜40代", strength: "希少部位の提供とコスパの良さ" },
+      { business: "ラーメン専門店", concern: "sales", targetAge: "20〜50代", strength: "自家製麺と長時間煮込んだスープ" },
+      { business: "美容室・ヘアサロン", concern: "sales", targetAge: "20〜40代女性", strength: "カラー技術の高さとアットホームな雰囲気" },
+      { business: "エステ・フェイシャルサロン", concern: "sales", targetAge: "30〜50代女性", strength: "肌トラブル改善の実績と丁寧なカウンセリング" },
+      { business: "ネイルサロン", concern: "sales", targetAge: "20〜40代女性", strength: "デザインの豊富さとリーズナブルな価格" },
+      { business: "パーソナルトレーニングジム", concern: "sales", targetAge: "30〜50代", strength: "専属トレーナーによるマンツーマン指導" },
+      { business: "ヨガ・ピラティススタジオ", concern: "sales", targetAge: "20〜40代女性", strength: "少人数制クラスと心身のリラクゼーション" },
+      { business: "フィットネスクラブ", concern: "sales", targetAge: "30〜60代", strength: "充実した設備と多彩なプログラム" },
+      { business: "歯科クリニック", concern: "acquisition", targetAge: "20〜50代", strength: "痛みに配慮した治療と最新設備" },
+      { business: "整骨院・整体院", concern: "acquisition", targetAge: "30〜60代", strength: "根本改善アプローチと丁寧な説明" },
+      { business: "不動産仲介会社", concern: "acquisition", targetAge: "25〜45歳", strength: "地域密着の豊富な物件情報" },
+      { business: "工務店・リフォーム会社", concern: "acquisition", targetAge: "30〜60代", strength: "地元密着の施工実績と丁寧なアフターサービス" },
+      { business: "学習塾・進学塾", concern: "sales", targetAge: "保護者（30〜50代）", strength: "合格実績と個別指導の充実" },
+      { business: "英会話スクール", concern: "sales", targetAge: "20〜40代", strength: "ネイティブ講師との実践的なレッスン" },
+      { business: "EC・ハンドメイド通販", concern: "sales", targetAge: "20〜45代", strength: "オリジナル商品と丁寧な梱包" },
+      { business: "ペットサロン・トリミング", concern: "sales", targetAge: "20〜40代ペットオーナー", strength: "専門知識豊富なスタッフとアットホームな空間" },
+      { business: "農業・農産物直販", concern: "sales", targetAge: "30〜50代の食にこだわる層", strength: "無農薬・有機栽培の安心安全な農産物" },
+      { business: "旅行代理店・ツアー企画", concern: "sales", targetAge: "20〜60代", strength: "オーダーメイドのプランと現地情報の豊富さ" },
+      { business: "ブライダル・フォトスタジオ", concern: "sales", targetAge: "20〜30代カップル", strength: "完全オーダーメイドの演出と熟練カメラマン" },
+      { business: "IT・Web制作会社", concern: "hiring", targetAge: "20〜35歳のエンジニア", strength: "最新技術の活用と自由な働き方" },
+      { business: "建設・土木会社", concern: "hiring", targetAge: "20〜35歳の技術者", strength: "大型案件の施工実績と手厚い福利厚生" },
+      { business: "訪問介護・デイサービス", concern: "hiring", targetAge: "介護職希望者（25〜50代）", strength: "充実した研修制度と働きやすい環境" },
+      { business: "税理士・会計事務所", concern: "acquisition", targetAge: "中小企業経営者", strength: "創業支援の実績と丁寧なコミュニケーション" },
+      { business: "保険代理店", concern: "acquisition", targetAge: "30〜50代", strength: "複数社比較による最適提案と充実のアフターフォロー" },
+      { business: "カーディーラー・中古車販売", concern: "sales", targetAge: "25〜55歳", strength: "豊富な在庫と充実のアフターサービス" },
+      { business: "葬儀社・終活支援", concern: "branding", targetAge: "40〜70代", strength: "24時間対応と故人への丁寧な対応実績" },
+    ];
+    const RANDOM_NAMES = [
+      { name: "山田 浩二", age: "48歳" }, { name: "田中 美穂", age: "36歳" },
+      { name: "鈴木 健太", age: "42歳" }, { name: "佐藤 恵子", age: "51歳" },
+      { name: "伊藤 大輔", age: "39歳" }, { name: "渡辺 由美", age: "44歳" },
+      { name: "中村 拓也", age: "33歳" }, { name: "小林 さゆり", age: "57歳" },
+      { name: "加藤 誠", age: "46歳" },  { name: "吉田 奈々", age: "31歳" },
+      { name: "山本 雄介", age: "55歳" }, { name: "松本 香織", age: "40歳" },
+    ];
+    const RANDOM_LOCATIONS = [
+      "東京・新宿", "東京・渋谷", "東京・池袋", "東京・銀座", "東京・吉祥寺",
+      "大阪・梅田", "大阪・難波", "名古屋市中区", "福岡市博多区",
+      "横浜市中区", "札幌市中央区", "仙台市青葉区", "京都市下京区", "神戸市中央区",
+    ];
+    const RANDOM_AVATARS = ["🍜","🌸","💪","🏠","📚","🐾","🚗","✂️","🍕","🌿","💍","🦷","✈️","💻","🏗️"];
+    const RANDOM_COLORS  = ["#e91e63","#1565c0","#2e7d32","#e65100","#6a1b9a","#00695c","#c62828","#f57f17","#37474f","#0277bd"];
+    const RANDOM_SNS_EXP = ["none","none","some","some","experienced"];
+    const RANDOM_BUDGETS  = ["low","mid","mid","high"];
+    const RANDOM_PERSONALITIES = ["friendly","friendly","brand","data","cautious"];
+
+    function generateRandomClient() {
+      const biz = pick(RANDOM_BUSINESS_POOL);
+      const person = pick(RANDOM_NAMES);
+      const personality = pick(RANDOM_PERSONALITIES);
+      const snsExp = pick(RANDOM_SNS_EXP);
+      const budget = pick(RANDOM_BUDGETS);
+      const form = {
+        name: person.name, business: biz.business,
+        location: pick(RANDOM_LOCATIONS), background: "",
+        personality, snsExp, concern: biz.concern,
+        budget, targetAge: biz.targetAge, strength: biz.strength, startTiming: ""
+      };
+      const responses = generateCustomResponses(form);
+      return {
+        id: "random_" + Date.now(),
+        name: person.name, age: person.age,
+        business: biz.business, location: form.location,
+        avatar: pick(RANDOM_AVATARS), color: pick(RANDOM_COLORS),
+        background: `${biz.business}を経営。強み：${biz.strength}。SNS${snsExp === 'none' ? 'はほぼ未経験' : snsExp === 'some' ? '経験少しあり' : 'ある程度経験あり'}。`,
+        personality: { friendly:"話好き・任せ上手・大らか", brand:"こだわりが強い・世界観優先", data:"論理的・成果を数字で見たい", cautious:"リスク重視・社内説得が必要" }[personality],
+        difficulty: "ランダム", difficultyClass: "difficulty-custom", responses,
+      };
+    }
+
+    // ===== PERSONALITY OPTIONS =====
+    const PERSONALITIES = [
+      { id: "friendly", emoji: "😊", name: "フレンドリー", desc: "話好き・任せ上手・大らか" },
+      { id: "brand",    emoji: "✨", name: "ブランド重視", desc: "こだわりが強い・世界観優先" },
+      { id: "data",     emoji: "📊", name: "数字・ROI重視", desc: "論理的・成果を数字で見たい" },
+      { id: "cautious", emoji: "🤔", name: "慎重・懐疑的",  desc: "リスク重視・社内説得が必要" },
+    ];
+
+    // ===== CUSTOM CLIENT FORM =====
+    function CustomClientForm({ onSubmit, onCancel }) {
+      const [form, setForm] = useState({
+        name: "", business: "", location: "", background: "",
+        personality: "friendly", snsExp: "none",
+        concern: "sales", budget: "mid",
+        targetAge: "", strength: "", startTiming: ""
+      });
+      const [errors, setErrors] = useState({});
+
+      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+      const validate = () => {
+        const e = {};
+        if (!form.name.trim()) e.name = "名前を入力してください";
+        if (!form.business.trim()) e.business = "ビジネス名・業種を入力してください";
+        return e;
+      };
+
+      const handleSubmit = () => {
+        const e = validate();
+        if (Object.keys(e).length > 0) { setErrors(e); return; }
+        const responses = generateCustomResponses(form);
+        const avatars = ["🌟","🎯","🚀","💡","🎪","🎭","🌈","🔥","💎","🏆"];
+        const colors = ["#7b1fa2","#00695c","#e65100","#1565c0","#c62828","#2e7d32","#4527a0","#f57f17"];
+        const client = {
+          id: "custom_" + Date.now(),
+          name: form.name,
+          age: "",
+          business: form.business,
+          location: form.location || "未設定",
+          avatar: avatars[Math.floor(Math.random() * avatars.length)],
+          color: colors[Math.floor(Math.random() * colors.length)],
+          background: form.background || `${form.business}でショート動画運用を検討中。`,
+          personality: PERSONALITIES.find(p => p.id === form.personality)?.desc || "",
+          difficulty: "カスタム",
+          difficultyClass: "difficulty-custom",
+          responses
+        };
+        onSubmit(client);
+      };
+
+      return (
+        <div className="modal-overlay">
+          <div className="form-modal">
+            <h2>✏️ カスタムクライアントを作成</h2>
+            <p className="form-subtitle">実際のお客様に合わせて設定してください。名前と業種だけ入力すればOKです。</p>
+
+            <div className="form-row">
+              <div className="form-section">
+                <label className="form-label">クライアント名<span>*</span></label>
+                <input className="form-input" placeholder="例：山田 花子" value={form.name} onChange={e => set("name", e.target.value)} />
+                {errors.name && <div className="form-error">{errors.name}</div>}
+              </div>
+              <div className="form-section">
+                <label className="form-label">ビジネス名・業種<span>*</span></label>
+                <input className="form-input" placeholder='例：カフェ「Sunny Day」' value={form.business} onChange={e => set("business", e.target.value)} />
+                {errors.business && <div className="form-error">{errors.business}</div>}
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-section">
+                <label className="form-label">所在地</label>
+                <input className="form-input" placeholder="例：東京・渋谷" value={form.location} onChange={e => set("location", e.target.value)} />
+              </div>
+              <div className="form-section">
+                <label className="form-label">主なターゲット年齢層</label>
+                <input className="form-input" placeholder="例：30〜40代の女性" value={form.targetAge} onChange={e => set("targetAge", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-section">
+              <label className="form-label">現状・背景（任意）</label>
+              <textarea className="form-textarea" placeholder="例：開業3年のカフェ。SNSは未経験でフォロワーゼロ。近くに競合が増えて集客に悩んでいる。" value={form.background} onChange={e => set("background", e.target.value)} />
+            </div>
+
+            <div className="form-section">
+              <label className="form-label">強み・差別化ポイント（任意）</label>
+              <input className="form-input" placeholder="例：手作りスイーツ、丁寧なカウンセリング" value={form.strength} onChange={e => set("strength", e.target.value)} />
+            </div>
+
+            <div className="form-section">
+              <label className="form-label">性格タイプ</label>
+              <div className="personality-grid">
+                {PERSONALITIES.map(p => (
+                  <div
+                    key={p.id}
+                    className={`personality-option ${form.personality === p.id ? "selected" : ""}`}
+                    onClick={() => set("personality", p.id)}
+                  >
+                    <div className="p-emoji">{p.emoji}</div>
+                    <div className="p-name">{p.name}</div>
+                    <div className="p-desc">{p.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-section">
+                <label className="form-label">SNS経験</label>
+                <select className="form-select" value={form.snsExp} onChange={e => set("snsExp", e.target.value)}>
+                  <option value="none">ほぼ未経験</option>
+                  <option value="some">少し経験あり</option>
+                  <option value="experienced">ある程度経験あり</option>
+                </select>
+              </div>
+              <div className="form-section">
+                <label className="form-label">主な目標・悩み</label>
+                <select className="form-select" value={form.concern} onChange={e => set("concern", e.target.value)}>
+                  <option value="sales">売上・新規集客を増やしたい</option>
+                  <option value="brand">ブランド認知度を上げたい</option>
+                  <option value="followers">フォロワーを増やしたい</option>
+                  <option value="hiring">採用・会社認知に使いたい</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-section">
+                <label className="form-label">月間予算感</label>
+                <select className="form-select" value={form.budget} onChange={e => set("budget", e.target.value)}>
+                  <option value="low">〜5万円/月</option>
+                  <option value="mid">5〜10万円/月</option>
+                  <option value="high">10〜15万円/月</option>
+                  <option value="vhigh">20万円以上/月</option>
+                </select>
+              </div>
+              <div className="form-section">
+                <label className="form-label">希望開始時期（任意）</label>
+                <input className="form-input" placeholder="例：来月から、3ヶ月以内" value={form.startTiming} onChange={e => set("startTiming", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button className="btn-form-cancel" onClick={onCancel}>キャンセル</button>
+              <button className="btn-form-submit" onClick={handleSubmit}>このクライアントで練習する →</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== HELP MODAL =====
+    function HelpModal({ onClose }) {
+      return (
+        <div className="help-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+          <div className="help-modal">
+            <div className="help-modal-header">
+              <h2>📖 使い方ガイド</h2>
+              <button className="help-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="help-body">
+
+              <div className="help-section">
+                <h3>このアプリについて</h3>
+                <p style={{fontSize:'14px', color:'#444', lineHeight:'1.7'}}>ショート動画の運用代行を提案する際の<strong>クライアントヒアリングを練習</strong>するシミュレーターです。Groq AIが演じるクライアントに質問し、必要な情報を引き出すスキルを身につけましょう。</p>
+              </div>
+
+              <div className="help-section">
+                <h3>基本的な使い方</h3>
+                <div className="help-steps">
+                  <div className="help-step">
+                    <div className="help-step-num">1</div>
+                    <div className="help-step-text"><strong>クライアントを選ぶ</strong> — プリセット4名・🎲ランダム（28業種）・カスタム作成の3種類から選べます。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num">2</div>
+                    <div className="help-step-text"><strong>難易度を選ぶ</strong> — やさしい・普通・むずかしいの3段階。最初は「やさしい」がおすすめです。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num">3</div>
+                    <div className="help-step-text"><strong>ヒアリング開始</strong> — チャット形式でクライアントに質問します。テキスト入力か🎤音声入力が使えます。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num">4</div>
+                    <div className="help-step-text"><strong>10項目をカバーする</strong> — 📋チェックリストを見ながら未カバーの項目を意識して質問しましょう。本番想定の場合はリストを非表示にして練習できます。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num">5</div>
+                    <div className="help-step-text"><strong>採点・フィードバック</strong> — 全項目カバーすると終了を促されます。「ヒアリング終了」ボタンでいつでも採点できます。</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-section">
+                <h3>ヘッダーボタンの説明</h3>
+                <div className="help-steps">
+                  <div className="help-step">
+                    <div style={{fontSize:'20px', width:'24px', textAlign:'center', flexShrink:0}}>🔇</div>
+                    <div className="help-step-text"><strong>音読オン/オフ</strong> — クライアントの返答を自動で音読します。各メッセージ下の「▶」ボタンで個別再生も可能です。（ブラウザ標準機能・完全無料）</div>
+                  </div>
+                  <div className="help-step">
+                    <div style={{fontSize:'20px', width:'24px', textAlign:'center', flexShrink:0}}>📋</div>
+                    <div className="help-step-text"><strong>チェックリスト表示/非表示</strong> — 右サイドバーの表示を切り替えます。本番を想定した練習時は非表示にしましょう。</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-section">
+                <h3>採点の仕組み（10項目）</h3>
+                <p style={{fontSize:'13px', color:'#555', lineHeight:'1.7', marginBottom:'10px'}}>クライアントの目的（集客・採用・販売・ブランドなど）を自動判定し、その目的に合わせた重み付きで採点します。</p>
+                <div style={{display:'flex', flexWrap:'wrap', gap:'6px'}}>
+                  {KEY_TOPICS.map(t => (
+                    <span key={t.id} style={{background:'#e8eaf6', color:'#3949ab', borderRadius:'8px', padding:'4px 10px', fontSize:'12px', fontWeight:'600'}}>{t.icon} {t.label}</span>
+                  ))}
+                </div>
+                <div className="help-grade-row" style={{marginTop:'14px'}}>
+                  <span className="help-grade" style={{background:'#fff9c4', color:'#f57f17'}}>S 100点</span>
+                  <span className="help-grade" style={{background:'#e8f5e9', color:'#2e7d32'}}>A 80〜90点</span>
+                  <span className="help-grade" style={{background:'#e3f2fd', color:'#1565c0'}}>B 60〜70点</span>
+                  <span className="help-grade" style={{background:'#fce4ec', color:'#c62828'}}>C 50点以下</span>
+                </div>
+              </div>
+
+              <div className="help-section">
+                <h3>難易度の違い</h3>
+                <div className="help-steps">
+                  <div className="help-step">
+                    <div className="help-step-num" style={{background:'#43a047'}}>易</div>
+                    <div className="help-step-text"><strong>やさしい</strong> — クライアントが積極的に情報を話してくれます。初めての方はここから。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num" style={{background:'#fb8c00'}}>普</div>
+                    <div className="help-step-text"><strong>普通</strong> — 聞いたことには答えてくれますが、自分から話しすぎません。</div>
+                  </div>
+                  <div className="help-step">
+                    <div className="help-step-num" style={{background:'#e53935'}}>難</div>
+                    <div className="help-step-text"><strong>むずかしい</strong> — 警戒心が強く、的外れな質問には曖昧な返答をします。逆質問してくることも。</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-section">
+                <h3>ヒント</h3>
+                <div className="help-tip">
+                  <ul>
+                    <li>🎲ランダムモードで毎回違う業種のクライアントが来るので、本番に近い練習ができます</li>
+                    <li>慣れてきたら📋チェックリストを非表示にしてチャレンジしましょう</li>
+                    <li>一度に複数の質問を投げるより、1つずつ丁寧に聞くと自然な会話になります</li>
+                    <li>Chromeで🎤音声入力が使えます。🔊音読機能と組み合わせるとロールプレイ感が増します</li>
+                    <li>途中でページを閉じても会話は自動保存され、次回続きから再開できます</li>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== SELECT SCREEN =====
+    function SelectScreen({ onSelect, onCustom, onRandom, savedSession, onResume, onDiscard }) {
+      const [showHelp, setShowHelp] = useState(false);
+      const fmt = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      };
+      return (
+        <div className="select-screen">
+          {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+          {savedSession && (
+            <div className="resume-banner">
+              <div className="resume-banner-info">
+                <div className="resume-banner-title">💬 前回の会話が保存されています</div>
+                <div className="resume-banner-meta">
+                  {savedSession.client.name}（{savedSession.client.business}）・{savedSession.messages.length}件のメッセージ
+                  {savedSession.savedAt ? `　保存日時：${fmt(savedSession.savedAt)}` : ''}
+                </div>
+              </div>
+              <div className="resume-banner-actions">
+                <button className="btn-resume" onClick={onResume}>▶ 続きから再開</button>
+                <button className="btn-discard" onClick={onDiscard}>削除</button>
+              </div>
+            </div>
+          )}
+          <div className="select-header">
+            <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'10px'}}>
+              <h1>🎬 ヒアリング ロールプレイ</h1>
+              <button className="help-btn" onClick={() => setShowHelp(true)}>📖 取扱説明書</button>
+            </div>
+            <p>ショート動画運用代行のクライアントヒアリングを練習しましょう。<br/>
+            プリセット・ランダム・カスタムからクライアントを選んでください。</p>
+            <div className="badge-row">
+              <span className="badge">✦ 10項目採点</span>
+              <span className="badge">✦ AI会話（Groq）</span>
+              <span className="badge">✦ 28業種ランダム</span>
+              <span className="badge">✦ カスタム作成対応</span>
+            </div>
+          </div>
+          <div className="client-grid">
+            {CLIENTS.map(c => (
+              <div key={c.id} className="client-card" onClick={() => onSelect(c)}>
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:'4px', background: c.color, borderRadius:'16px 16px 0 0' }} />
+                <span className="card-avatar">{c.avatar}</span>
+                <div className="card-name">{c.name}（{c.age}）</div>
+                <div className="card-business">{c.business} ／ {c.location}</div>
+                <div className="card-desc">{c.background}</div>
+                <span className={`card-difficulty ${c.difficultyClass}`}>難易度：{c.difficulty}</span>
+              </div>
+            ))}
+            {/* Random card */}
+            <div className="client-card random-card" onClick={onRandom}>
+              <div className="random-card-dice">🎲</div>
+              <div className="random-card-title">ランダムクライアント</div>
+              <div className="random-card-sub">毎回異なる業種・性格の経営者が登場。<br/>本番さながらの多様な練習ができます。</div>
+              <div className="random-tag-row">
+                <span className="random-tag">飲食</span><span className="random-tag">美容</span><span className="random-tag">医療</span>
+                <span className="random-tag">不動産</span><span className="random-tag">教育</span><span className="random-tag">IT</span>
+                <span className="random-tag">+22業種</span>
+              </div>
+            </div>
+            {/* Custom card */}
+            <div className="client-card custom-card" onClick={onCustom}>
+              <div className="custom-card-plus">＋</div>
+              <div className="custom-card-title">カスタムクライアントを作成</div>
+              <div className="custom-card-sub">業種・性格・SNS経験・予算などを<br/>入力して任意のクライアントを設定</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== INTRO MODAL =====
+    function IntroModal({ client, difficulty, setDifficulty, onStart }) {
+      return (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h2>{client.avatar} {client.name}様とのヒアリング</h2>
+            <p><strong>{client.business}</strong><br/>{client.location}</p>
+            <div className="modal-rules">
+              <ul>
+                <li>下のチャット欄から自由に質問してください</li>
+                <li>10項目のトピックをすべてカバーできると満点です</li>
+                <li>「ヒアリング終了」ボタンで採点されます</li>
+                <li>サイドバーで進捗を確認できます</li>
+              </ul>
+            </div>
+            <p style={{fontSize:'13px', color:'#888', marginBottom:'16px'}}>クライアントの性格：{client.personality}</p>
+
+            <div className="diff-selector-label">攻略難易度を選択</div>
+            <div className="diff-selector">
+              {DIFFICULTIES.map(d => (
+                <button
+                  key={d.id}
+                  className={`diff-btn ${difficulty === d.id ? `selected-${d.id}` : ''}`}
+                  onClick={() => setDifficulty(d.id)}
+                >
+                  <span className="d-emoji">{d.emoji}</span>
+                  <span className="d-name">{d.label}</span>
+                  <span className="d-desc" style={{whiteSpace:'pre-line'}}>{d.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            <button className="btn-start" onClick={onStart}>ヒアリングを開始する →</button>
+          </div>
+        </div>
+      );
+    }
+
+    const SESSION_KEY = 'hearing_roleplay_session';
+    const WORKER_URL = 'https://groq-proxy.shuhei07060706.workers.dev/';
+
+    // ===== GROQ API =====
+    function buildSystemPrompt(client, difficulty) {
+      const diffInstructions = {
+        easy: 'あなたはフレンドリーで素直な性格です。質問にはわかりやすく答え、自発的に情報を補足することもあります。',
+        normal: '自然に会話し、質問には誠実に答えてください。たまに少し話が脱線することもあります。',
+        hard: '少し頑固で話が脱線しがちです。質問に対して「それはどういう意味ですか？」と逆に聞き返したり、曖昧な答えをしたりします。社内稟議が必要なので慎重で、すぐには決断しません。'
+      };
+      return `あなたは「${client.name}」というクライアントです。ショート動画制作会社の担当者（ユーザー）からヒアリングを受けています。
+
+## あなたのプロフィール
+- 名前: ${client.name}${client.age ? `（${client.age}）` : ''}
+- ビジネス: ${client.business}
+- 所在地: ${client.location}
+- 性格: ${client.personality}
+- 背景・状況: ${client.background || 'ショート動画の運用を検討中'}
+
+## 会話ルール
+- 必ず日本語で、クライアントとして自然に話してください
+- AIであることは絶対に明かさないでください
+- ショート動画の専門家ではなく、あくまで依頼を検討している一般的なビジネスオーナーとして振る舞ってください
+- 回答は2〜4文の自然な話し言葉にしてください
+- 相手の質問に対して具体的かつ自分のビジネスに即した内容で答えてください
+- 同じ内容の繰り返しは避け、会話の流れに沿って答えてください
+
+## 難易度（あなたの態度）
+${diffInstructions[difficulty] || diffInstructions.normal}
+
+（注：あなたの最初の挨拶は既に送信済みです）`;
+    }
+
+    async function callGroq(history, systemPrompt) {
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...history.slice(1).map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.text
+        }))
+      ];
+      const body = { model: 'llama-3.3-70b-versatile', messages, temperature: 0.88, max_tokens: 300 };
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content?.trim() || null;
+    }
+
+
+    // ===== CHAT SCREEN =====
+    function ChatScreen({ client, difficulty, onEnd, onBack, initialMessages, initialCoveredTopics }) {
+      const [messages, setMessages] = useState(initialMessages || [{ role: 'client', text: client.responses.greeting }]);
+      const [input, setInput] = useState('');
+      const [isTyping, setIsTyping] = useState(false);
+      const [coveredTopics, setCoveredTopics] = useState(initialCoveredTopics ? new Set(initialCoveredTopics) : new Set());
+      const [isRecording, setIsRecording] = useState(false);
+      const [showCompletion, setShowCompletion] = useState(false);
+      const [apiError, setApiError] = useState('');
+      const [showSidebar, setShowSidebar] = useState(true);
+      const [showMobileChecklist, setShowMobileChecklist] = useState(false);
+      const [ttsEnabled, setTtsEnabled] = useState(false);
+      const [speakingIdx, setSpeakingIdx] = useState(null);
+      const messagesEndRef = useRef(null);
+      const recognitionRef = useRef(null);
+      const systemPromptRef = useRef(buildSystemPrompt(client, difficulty));
+      const ttsSupported = typeof window !== 'undefined' && !!window.speechSynthesis;
+
+      const speak = useCallback((text, idx) => {
+        if (!ttsSupported) return;
+        window.speechSynthesis.cancel();
+        if (speakingIdx === idx) { setSpeakingIdx(null); return; }
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'ja-JP';
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        utter.onstart = () => setSpeakingIdx(idx);
+        utter.onend = () => setSpeakingIdx(null);
+        utter.onerror = () => setSpeakingIdx(null);
+        window.speechSynthesis.speak(utter);
+      }, [ttsSupported, speakingIdx]);
+      const diffInfo = DIFFICULTIES.find(d => d.id === difficulty) || DIFFICULTIES[1];
+      const allCovered = coveredTopics.size >= KEY_TOPICS.length;
+
+      // 全項目カバー時にバナーを表示
+      useEffect(() => {
+        if (allCovered) setShowCompletion(true);
+      }, [allCovered]);
+
+      // 自動保存: メッセージが更新されるたびに localStorage へ保存
+      useEffect(() => {
+        try {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            client,
+            difficulty,
+            messages,
+            coveredTopics: [...coveredTopics],
+            savedAt: new Date().toISOString(),
+          }));
+        } catch (e) {}
+      }, [messages, coveredTopics]);
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const micSupported = !!SpeechRecognition;
+
+      const toggleRecording = useCallback(() => {
+        if (!micSupported) return;
+        if (isRecording) {
+          recognitionRef.current?.stop();
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'ja-JP';
+        recognition.continuous = true;      // 話の途中で切れないよう継続モード
+        recognition.interimResults = true;  // 認識中のテキストをリアルタイム表示
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onerror = (e) => {
+          if (e.error !== 'aborted') setIsRecording(false);
+        };
+        // finalのみテキストボックスに反映し、interimは無視
+        let committed = '';
+        recognition.onresult = (e) => {
+          let interim = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) {
+              committed += t;
+            } else {
+              interim += t;
+            }
+          }
+          if (committed) {
+            setInput(prev => (prev ? prev + ' ' : '') + committed);
+            committed = '';
+          }
+        };
+        recognitionRef.current = recognition;
+        recognition.start();
+      }, [isRecording, micSupported, SpeechRecognition]);
+
+      useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
+
+      const sendMessage = useCallback(async () => {
+        const text = input.trim();
+        if (!text || isTyping) return;
+        const updatedMessages = [...messages, { role: 'user', text }];
+        setMessages(updatedMessages);
+        setInput('');
+        setCoveredTopics(prev2 => new Set([...prev2, ...detectCoveredTopics(text)]));
+        setIsTyping(true);
+        setApiError('');
+        const delay = difficulty === 'hard' ? 900 + Math.random() * 900 : 600 + Math.random() * 600;
+        await new Promise(r => setTimeout(r, delay));
+        let responseText = null;
+        try {
+          responseText = await callGroq(updatedMessages, systemPromptRef.current);
+        } catch(e) {
+          setApiError(`AI応答エラー（${e.message}）。ルールベースで回答します。`);
+        }
+        if (!responseText) {
+          const raw = getResponse(client, text, updatedMessages);
+          responseText = wrapResponse(raw, difficulty);
+        }
+        setMessages(prev => [...prev, { role: 'client', text: responseText }]);
+        setIsTyping(false);
+        if (ttsEnabled && responseText) {
+          const utter = new SpeechSynthesisUtterance(responseText);
+          utter.lang = 'ja-JP'; utter.rate = 1.0;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+        }
+      }, [input, isTyping, messages, client, difficulty, ttsEnabled]);
+
+      const handleKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+      const progress = Math.round((coveredTopics.size / KEY_TOPICS.length) * 100);
+
+      return (
+        <div className="chat-screen">
+          {showMobileChecklist && (
+            <div className="mobile-checklist-overlay" onClick={() => setShowMobileChecklist(false)}>
+              <div className="mobile-checklist-sheet" onClick={e => e.stopPropagation()}>
+                <div className="mobile-checklist-handle" />
+                <div className="mobile-checklist-header">
+                  <h3>📋 チェックリスト</h3>
+                  <button className="mobile-checklist-close" onClick={() => setShowMobileChecklist(false)}>✕</button>
+                </div>
+                <div className="mobile-checklist-body">
+                  <div className="progress-bar-wrap" style={{marginBottom:'16px'}}>
+                    <div className="progress-bar-label"><span>{coveredTopics.size} / {KEY_TOPICS.length} 項目</span><span>{progress}%</span></div>
+                    <div className="progress-bar-track"><div className="progress-bar-fill" style={{width:`${progress}%`}} /></div>
+                  </div>
+                  <div className="topic-list">
+                    {KEY_TOPICS.map(t => (
+                      <div key={t.id} className={`topic-item ${coveredTopics.has(t.id) ? 'covered' : 'uncovered'}`}>
+                        <span className="topic-icon">{t.icon}</span>
+                        <span className="topic-label">{t.label}</span>
+                        <span className="topic-check">{coveredTopics.has(t.id) ? '✓' : '○'}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hint-box" style={{marginTop:'14px'}}>💡 チェックが入ってない項目を意識して質問してみましょう！</div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="chat-main">
+            <div className="chat-header">
+              <div className="header-avatar" style={{ background: client.color + '22' }}>{client.avatar}</div>
+              <div className="header-info">
+                <h2>{client.name}</h2>
+                <p>{client.business} ／ {client.location}</p>
+              </div>
+              <div className="header-actions">
+                <span className={`diff-badge diff-badge-${difficulty}`}>{diffInfo.emoji} {diffInfo.label}</span>
+                {ttsSupported && (
+                  <button className={`tts-toggle-btn${ttsEnabled ? ' active' : ''}`} onClick={() => { setTtsEnabled(v => !v); window.speechSynthesis?.cancel(); setSpeakingIdx(null); }} title={ttsEnabled ? '音読オフ' : '音読オン'}>
+                    {ttsEnabled ? '🔊' : '🔇'}
+                  </button>
+                )}
+                <button className={`sidebar-toggle-btn${showSidebar ? ' active' : ''}`} onClick={() => { if (window.innerWidth <= 700) { setShowMobileChecklist(v => !v); } else { setShowSidebar(v => !v); } }} title="チェックリスト">
+                  📋
+                </button>
+<button className="btn-back" onClick={onBack}>← 戻る</button>
+                <button className="btn-end" onClick={() => onEnd(coveredTopics, messages)}>ヒアリング終了</button>
+              </div>
+            </div>
+
+            {apiError && <div className="api-error-bubble">⚠️ {apiError}</div>}
+
+            <div className="messages-area">
+              {messages.map((msg, i) => (
+                <div key={i} className={`message ${msg.role === 'user' ? 'user-msg' : 'client-msg'}`}>
+                  <div className="msg-avatar">{msg.role === 'client' ? client.avatar : '🧑‍💼'}</div>
+                  <div>
+                    <div className="msg-name">{msg.role === 'client' ? client.name : 'あなた'}</div>
+                    <div className="msg-bubble">{msg.text}</div>
+                    {msg.role === 'client' && ttsSupported && (
+                      <button className={`speak-btn${speakingIdx === i ? ' speaking' : ''}`} onClick={() => speak(msg.text, i)} title="音読">
+                        {speakingIdx === i ? '🔊' : '▶'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="message client-msg">
+                  <div className="msg-avatar">{client.avatar}</div>
+                  <div>
+                    <div className="msg-name">{client.name}</div>
+                    <div className="typing-indicator">
+                      <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {showCompletion && (
+              <div className="completion-banner">
+                <div className="completion-banner-top">
+                  <span style={{fontSize:'28px'}}>🎉</span>
+                  <div>
+                    <div className="completion-banner-title">全10項目をカバーしました！</div>
+                    <div className="completion-banner-sub">ヒアリングを終了して結果を確認しましょう。まだ続けることもできます。</div>
+                  </div>
+                </div>
+                <div className="completion-banner-actions">
+                  <button className="btn-complete" onClick={() => onEnd(coveredTopics, messages)}>🏁 採点する</button>
+                  <button className="btn-continue" onClick={() => setShowCompletion(false)}>続ける</button>
+                </div>
+              </div>
+            )}
+
+            <div className="input-area">
+              <textarea className="input-box" placeholder={isRecording ? '🎤 聞いています…' : '質問を入力… (Enter で送信 / Shift+Enter で改行)'} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} rows={1} />
+              {micSupported && (
+                <button className={`mic-btn${isRecording ? ' recording' : ''}`} onClick={toggleRecording} disabled={isTyping} title={isRecording ? '録音停止' : '音声入力'}>
+                  {isRecording ? '⏹' : '🎤'}
+                </button>
+              )}
+              <button className="send-btn" onClick={sendMessage} disabled={!input.trim() || isTyping}>➤</button>
+            </div>
+          </div>
+
+          <div className={`sidebar${showSidebar ? '' : ' hidden'}`}>
+            <div className="sidebar-section">
+              <h3>クライアント情報</h3>
+              <div className="client-profile">
+                <span className="profile-avatar">{client.avatar}</span>
+                <div className="profile-name">{client.name}{client.age ? `（${client.age}）` : ""}</div>
+                <div className="profile-business">{client.business}</div>
+                <div className="profile-loc">📍 {client.location}</div>
+                <span className={`profile-tag ${client.difficultyClass}`}>キャラ：{client.difficulty}</span>
+                <span className={`diff-badge diff-badge-${difficulty}`} style={{marginTop:'6px', display:'inline-flex'}}>{diffInfo.emoji} {diffInfo.label}</span>
+                <div className="profile-personality">{client.personality}</div>
+              </div>
+            </div>
+            <div className="sidebar-section">
+              <h3>ヒアリング進捗</h3>
+              <div className="progress-bar-wrap">
+                <div className="progress-bar-label"><span>{coveredTopics.size} / {KEY_TOPICS.length} 項目</span><span>{progress}%</span></div>
+                <div className="progress-bar-track"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
+              </div>
+            </div>
+            <div className="sidebar-section">
+              <h3>チェックリスト</h3>
+              <div className="topic-list">
+                {KEY_TOPICS.map(t => (
+                  <div key={t.id} className={`topic-item ${coveredTopics.has(t.id) ? 'covered' : 'uncovered'}`}>
+                    <span className="topic-icon">{t.icon}</span>
+                    <span className="topic-label">{t.label}</span>
+                    <span className="topic-check">{coveredTopics.has(t.id) ? '✓' : '○'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sidebar-section">
+              <div className="hint-box">💡 チェックが入ってない項目を意識して質問してみましょう！</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== RESULT SCREEN =====
+    function ResultScreen({ client, difficulty, coveredTopics, messages, onRetry, onSelectNew }) {
+      const goal = detectGoal(messages, client);
+      const score = calcWeightedScore(coveredTopics, goal);
+      const { grade, color, label } = getGrade(score);
+      const feedback = buildFeedback(coveredTopics, goal, client.name);
+      const diffInfo = DIFFICULTIES.find(d => d.id === difficulty) || DIFFICULTIES[1];
+      const goalInfo = GOAL_LABELS[goal];
+
+      const importanceLabel = { critical: '最重要', important: '重要', bonus: '補足' };
+
+      return (
+        <div className="result-screen">
+          <div className="result-card">
+            <div className="result-header">
+              <div className="result-grade" style={{ color }}>{grade}</div>
+              <div className="result-score-text">{label}　{score}点 / 100点</div>
+              <div className="result-subtitle">目的達成度スコア（目的別加重評価）</div>
+            </div>
+
+            <div className="result-goal-row">
+              <span style={{fontSize:'20px'}}>{goalInfo.icon}</span>
+              <div>
+                <div style={{fontSize:'12px', color:'#666', marginBottom:'2px'}}>検出されたクライアントの目的</div>
+                <div className="result-goal-badge">{goalInfo.label}</div>
+              </div>
+              <div style={{marginLeft:'auto', fontSize:'12px', color:'#888', textAlign:'right'}}>
+                項目カバー率<br/>
+                <strong style={{color:'#3949ab'}}>{coveredTopics.size} / {KEY_TOPICS.length}</strong>
+              </div>
+            </div>
+
+            <div className="result-client-row">
+              <div className="result-client-avatar">{client.avatar}</div>
+              <div className="result-client-info">
+                <p>クライアント</p>
+                <strong>{client.name}（{client.business}）</strong>
+              </div>
+              <span className={`diff-badge diff-badge-${difficulty}`} style={{marginLeft:'auto'}}>{diffInfo.emoji} {diffInfo.label}</span>
+            </div>
+
+            <div className="result-topics">
+              {KEY_TOPICS.map(t => {
+                const hit = coveredTopics.has(t.id);
+                const importance = hit ? '' : getTopicImportance(t.id, goal);
+                return (
+                  <div key={t.id} className={`result-topic ${hit ? 'hit' : `miss ${importance}`}`}>
+                    <span>{t.icon}</span>
+                    <span style={{flex:1}}>{t.label}</span>
+                    {hit
+                      ? <span>✓</span>
+                      : <><span>✗</span><span className="topic-importance-tag">{importanceLabel[importance]}</span></>
+                    }
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="result-feedback">
+              <h3>📝 フィードバック</h3>
+              <p style={{ whiteSpace: 'pre-line' }}>{feedback}</p>
+            </div>
+            <div className="result-buttons">
+              <button className="btn-retry" onClick={onRetry}>🔄 同じクライアントで再挑戦</button>
+              <button className="btn-other" onClick={onSelectNew}>👥 別のクライアントへ</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== APP =====
+    function App() {
+      const [screen, setScreen] = useState('select');
+      const [selectedClient, setSelectedClient] = useState(null);
+      const [coveredTopics, setCoveredTopics] = useState(new Set());
+      const [sessionMessages, setSessionMessages] = useState([]);
+      const [difficulty, setDifficulty] = useState('normal');
+      const [resumeData, setResumeData] = useState(null); // 再開時の初期データ
+
+      // 起動時に保存セッションを読み込む
+      const [savedSession, setSavedSession] = useState(() => {
+        try {
+          const raw = localStorage.getItem(SESSION_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      });
+
+      const clearSession = () => {
+        localStorage.removeItem(SESSION_KEY);
+        setSavedSession(null);
+      };
+
+      const handleSelect = (client) => { setResumeData(null); setSelectedClient(client); setScreen('intro'); };
+      const handleRandom = () => { setResumeData(null); setSelectedClient(generateRandomClient()); setScreen('intro'); };
+      const handleCustom = () => setScreen('custom-form');
+      const handleCustomSubmit = (client) => { setResumeData(null); setSelectedClient(client); setScreen('intro'); };
+      const handleStart = () => setScreen('chat');
+      const handleEnd = (topics, msgs) => { clearSession(); setCoveredTopics(topics); setSessionMessages(msgs || []); setScreen('result'); };
+      const handleBack = () => { clearSession(); setResumeData(null); setSelectedClient(null); setScreen('select'); };
+      const handleRetry = () => { setCoveredTopics(new Set()); setResumeData(null); setScreen('intro'); };
+      const handleSelectNew = () => { clearSession(); setSelectedClient(null); setCoveredTopics(new Set()); setResumeData(null); setScreen('select'); };
+
+      // 前回の会話を再開
+      const handleResume = () => {
+        if (!savedSession) return;
+        setSelectedClient(savedSession.client);
+        setDifficulty(savedSession.difficulty);
+        setResumeData({ messages: savedSession.messages, coveredTopics: savedSession.coveredTopics });
+        setSavedSession(null); // バナーを消す（localStorage はChatScreenが上書きし続ける）
+        setScreen('chat');
+      };
+
+      const handleDiscard = () => { clearSession(); };
+
+      const selectScreenProps = { onSelect: handleSelect, onCustom: handleCustom, onRandom: handleRandom, savedSession, onResume: handleResume, onDiscard: handleDiscard };
+
+      if (screen === 'select') return <SelectScreen {...selectScreenProps} />;
+      if (screen === 'custom-form') return (
+        <>
+          <SelectScreen {...selectScreenProps} />
+          <CustomClientForm onSubmit={handleCustomSubmit} onCancel={() => setScreen('select')} />
+        </>
+      );
+      if (screen === 'intro') return (
+        <>
+          <SelectScreen {...selectScreenProps} />
+          <IntroModal client={selectedClient} difficulty={difficulty} setDifficulty={setDifficulty} onStart={handleStart} />
+        </>
+      );
+      if (screen === 'chat') return <ChatScreen client={selectedClient} difficulty={difficulty} onEnd={handleEnd} onBack={handleBack} initialMessages={resumeData?.messages} initialCoveredTopics={resumeData?.coveredTopics} />;
+      if (screen === 'result') return <ResultScreen client={selectedClient} difficulty={difficulty} coveredTopics={coveredTopics} messages={sessionMessages} onRetry={handleRetry} onSelectNew={handleSelectNew} />;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
